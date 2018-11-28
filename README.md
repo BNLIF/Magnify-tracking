@@ -1,0 +1,5 @@
+# Magnify-tracking
+
+```
+./magnify [file]
+```
