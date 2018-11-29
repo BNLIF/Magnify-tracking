@@ -375,6 +375,7 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
         TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
         int pointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
         data->ZoomProj(pointIndex, 20);
+        data->DrawPoint(pointIndex);
 
 
 

@@ -9,6 +9,7 @@ class TTree;
 class TH2F;
 class TBox;
 class TCanvas;
+class TMarker;
 
 class Data {
 public:
@@ -44,9 +45,9 @@ public:
     std::map<int, int> data_cluster_map; // cluster id => index
 
 
-    TH2F *h_proj[3];
-    std::vector<TBox*> boxes[3];
-    vector<float> box_values[3];
+    // TH2F *h_proj[3];
+    // std::vector<TBox*> boxes[3];
+    // vector<float> box_values[3];
 
 
     bool isData;
@@ -59,11 +60,13 @@ public:
     int pad_proj;
     int pad_dqdx;
     int currentCluster;
+    TMarker *currentPoint[3];
     void LoadRec();
     void LoadProj();
     void DrawDQDX();
     void DrawProj();
     void ZoomProj(int pointIndex, int zoomBin);
+    void DrawPoint(int pointIndex);
 
 
 private:

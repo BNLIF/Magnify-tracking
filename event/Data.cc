@@ -14,6 +14,7 @@
 #include "TROOT.h"
 #include "TGraph2D.h"
 #include "TCanvas.h"
+#include "TMarker.h"
 
 #include <vector>
 #include <string>
@@ -60,6 +61,12 @@ Data::Data(const char* filename)
     data_channel = new vector<vector<int> >;
     data_time_slice = new vector<vector<int> >;
     data_charge = new vector<vector<int> >;
+
+    for (int i=0; i<3; i++) {
+        currentPoint[i] = new TMarker(0, 0, 24);
+        currentPoint[i]->SetMarkerColor(6);
+        currentPoint[i]->SetMarkerSize(4);
+    }
 
     LoadData(filename);
 }
@@ -262,6 +269,26 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
     c1->GetPad(pad_proj+2)->Modified();
     c1->GetPad(pad_proj+2)->Update();
 }
+
+void Data::DrawPoint(int pointIndex)
+{
+    double x[3] = {0};
+    x[0] =  rec_u->at(currentCluster).at(pointIndex);
+    x[1] =  rec_v->at(currentCluster).at(pointIndex);
+    x[2] =  rec_w->at(currentCluster).at(pointIndex);
+    double t =  rec_t->at(currentCluster).at(pointIndex);
+
+    for (int i=0; i<3; i++) {
+        c1->cd(pad_proj+i);
+        currentPoint[i]->SetX(x[i]);
+        currentPoint[i]->SetY(t);
+        currentPoint[i]->Draw();
+        c1->GetPad(pad_proj+i)->Modified();
+        c1->GetPad(pad_proj+i)->Update();
+    }
+
+}
+
 
 
 // void Data::Project()
