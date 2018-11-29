@@ -167,9 +167,9 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
     if (g_rec_v) { delete g_rec_v;}
     if (g_rec_w) { delete g_rec_w;}
 
-    h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0-0.5, nChannel_u-0.5, nTime, 1-0.5, nTime+1-0.5);
-    h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.5, nChannel_u+nChannel_v-0.5, nTime, 1-0.5, nTime+1-0.5);
-    h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.5, nChannel_u+nChannel_v+nChannel_w-0.5, nTime, 1-0.5, nTime+1-0.5);
+    h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0-0.0, nChannel_u-0.0, nTime, 0-0.0, nTime-0.0);
+    h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.0, nChannel_u+nChannel_v-0.0, nTime, 0-0.0, nTime-0.0);
+    h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.0, nChannel_u+nChannel_v+nChannel_w-0.0, nTime, 0-0.0, nTime-0.0);
 
     TH2F *h[3] = {h_proj_u, h_proj_v, h_proj_w};
     int size = data_channel->at(index).size();
@@ -189,7 +189,7 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
             hc = h_proj_w;
             x -= (nChannel_u+nChannel_v);
         }
-        hc->SetBinContent(x, y, z);
+        hc->SetBinContent(x+1, y+1, z);
     }
 
     int size2 = rec_u->at(bin).size();
@@ -230,9 +230,9 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
 void Data::Project()
 {
 
-    h_proj[0] = new TH2F("h_proj_u", "", nChannel_u, 1-0.5, nChannel_u-0.5, nTime, 1-0.5, nTime-0.5);
-    h_proj[1] = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.5, nChannel_u+nChannel_v-0.5, nTime, 1-0.5, nTime-0.5);
-    h_proj[2] = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.5, nChannel_u+nChannel_v+nChannel_w-0.5, nTime, 1-0.5, nTime-0.5);
+    h_proj[0] = new TH2F("h_proj_u", "", nChannel_u, -0.5, nChannel_u-0.5, nTime, 0-0.5, nTime-0.5);
+    h_proj[1] = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.5, nChannel_u+nChannel_v-0.5, nTime, 0-0.5, nTime-0.5);
+    h_proj[2] = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.5, nChannel_u+nChannel_v+nChannel_w-0.5, nTime, 0-0.5, nTime-0.5);
 
     T_proj_data->Project("h_proj_u", "time_slice:channel", "charge/500", "channel<2400");
     T_proj_data->Project("h_proj_v", "time_slice:channel", "charge/500", "channel<2400 && channel<4800");
