@@ -34,7 +34,8 @@ Data::Data(const char* filename)
     pad_com_dis = 2;
     pad_com_dtheta = 3;
     pad_proj = 4;
-    pad_3d = 7;
+    pad_3d = 3;
+    pad_pred = 7;
     currentCluster = 0;
     doDrawBadCh = false;
 
@@ -136,6 +137,7 @@ void Data::LoadProj()
     T_proj_data->SetBranchAddress("channel", &data_channel);
     T_proj_data->SetBranchAddress("time_slice", &data_time_slice);
     T_proj_data->SetBranchAddress("charge", &data_charge);
+    T_proj_data->SetBranchAddress("charge_pred", &data_charge_pred);
 
     T_proj_data->GetEntry(0);
     int size = data_cluster_id->size();
@@ -255,36 +257,58 @@ void Data::DrawProj()
     TGraph *g_rec_u = (TGraph*)gROOT->FindObject("g_rec_u");
     TGraph *g_rec_v = (TGraph*)gROOT->FindObject("g_rec_v");
     TGraph *g_rec_w = (TGraph*)gROOT->FindObject("g_rec_w");
+
+    TH2F *h_pred_u = (TH2F*)gROOT->FindObject("h_pred_u");
+    TH2F *h_pred_v = (TH2F*)gROOT->FindObject("h_pred_v");
+    TH2F *h_pred_w = (TH2F*)gROOT->FindObject("h_pred_w");
+
     if (h_proj_u) { delete h_proj_u;}
     if (h_proj_v) { delete h_proj_v;}
     if (h_proj_w) { delete h_proj_w;}
+
     if (g_rec_u) { delete g_rec_u;}
     if (g_rec_v) { delete g_rec_v;}
     if (g_rec_w) { delete g_rec_w;}
+
+    if (h_pred_u) { delete h_pred_u;}
+    if (h_pred_v) { delete h_pred_v;}
+    if (h_pred_w) { delete h_pred_w;}
 
     h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
     h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
     h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
 
+    h_pred_u = new TH2F("h_pred_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
+    h_pred_v = new TH2F("h_pred_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
+    h_pred_w = new TH2F("h_pred_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
+
     TH2F *h[3] = {h_proj_u, h_proj_v, h_proj_w};
+    TH2F *hpred[3] = {h_pred_u, h_pred_v, h_pred_w};
     int size = data_channel->at(index).size();
     TH2F *hc = 0;
+    TH2F *hp = 0;
     for (int i=0; i<size; i++) {
         int x = data_channel->at(index).at(i);
         int y = data_time_slice->at(index).at(i);
         int z = data_charge->at(index).at(i);
+        double charge_pred = data_charge_pred->at(index).at(i);
+        double z_pred = (charge_pred-z+0.01)/(z+0.01);
         if (x<nChannel_u) {
             hc = h_proj_u;
+            hp = h_pred_u;
         }
         else if (x<nChannel_u+nChannel_v) {
             hc = h_proj_v;
+            hp = h_pred_v;
             x -= nChannel_u;
         }
         else {
             hc = h_proj_w;
+            hp = h_pred_w;
             x -= (nChannel_u+nChannel_v);
         }
         hc->SetBinContent(x+1, y+1, z);
+        hp->SetBinContent(x+1, y+1, z_pred);
     }
 
     int size2 = rec_u->at(currentCluster).size();
@@ -314,6 +338,16 @@ void Data::DrawProj()
         g[i]->SetLineWidth(2);
         g[i]->SetLineColor(6);
         g[i]->Draw("LPsame");
+        c1->GetPad(pad)->Modified();
+        c1->GetPad(pad)->Update();
+
+        hpred[i]->SetTitle("abs(charge_pred-charge)/charge");
+        hpred[i]->GetXaxis()->SetTitle("Channel");
+        hpred[i]->GetYaxis()->SetTitle("Time Slice");
+        hpred[i]->GetZaxis()->SetRangeUser(0.01, 1);
+        pad = pad_pred+i;
+        c1->cd(pad);
+        hpred[i]->Draw("colz");
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
     }
@@ -370,6 +404,43 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
     }
     c1->GetPad(pad_proj+2)->Modified();
     c1->GetPad(pad_proj+2)->Update();
+
+    // zoom prediction
+    h = (TH2F*)gROOT->FindObject("h_pred_u");
+    if (zoomBin<0) {
+        h->GetXaxis()->UnZoom();
+        h->GetYaxis()->UnZoom();
+    }
+    else {
+        h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
+        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    }
+    c1->GetPad(pad_pred)->Modified();
+    c1->GetPad(pad_pred)->Update();
+
+    h = (TH2F*)gROOT->FindObject("h_pred_v");
+    if (zoomBin<0) {
+        h->GetXaxis()->UnZoom();
+        h->GetYaxis()->UnZoom();
+    }
+    else {
+        h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
+        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    }
+    c1->GetPad(pad_pred+1)->Modified();
+    c1->GetPad(pad_pred+1)->Update();
+
+    h = (TH2F*)gROOT->FindObject("h_pred_w");
+    if (zoomBin<0) {
+        h->GetXaxis()->UnZoom();
+        h->GetYaxis()->UnZoom();
+    }
+    else {
+        h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
+        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    }
+    c1->GetPad(pad_pred+2)->Modified();
+    c1->GetPad(pad_pred+2)->Update();
 
     // zoom 3D
     double x =  rec_x->at(currentCluster).at(pointIndex);
@@ -464,7 +535,7 @@ void Data::DrawNewCluster()
 {
     DrawDQDX();
     DrawComDis();
-    DrawComDtheta();
+    // DrawComDtheta();
     DrawProj();
     DrawPoint(0);
     Draw3D();

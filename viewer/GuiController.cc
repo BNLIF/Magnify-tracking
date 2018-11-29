@@ -335,19 +335,25 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
 {
     if (ev == 11) { // clicked
         if (!(selected->IsA() == TGraph::Class()
-            // || selected->IsA() == TBox::Class()
+            || selected->IsA() == TH2F::Class()
             // || selected->IsA() == TLine::Class()
         )) return;
         TVirtualPad* pad = vw->can->GetClickSelectedPad();
         int padNo = pad->GetNumber();
         double xx = pad->AbsPixeltoX(x);
         double yy = pad->AbsPixeltoY(y);
-        cout << "pad " << padNo << ": (" << xx << ", " << yy << ")";
+        cout << "pad " << padNo << ": (" << xx << ", " << yy << ")" << endl;
+        if (selected->IsA() == TGraph::Class() && padNo <=3) { // first row tgraph clicked
+            TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
+            int pointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
+            data->ZoomProj(pointIndex, 20);
+            data->DrawPoint(pointIndex);
+        }
+        else if (selected->IsA() == TH2F::Class()) { // 2nd row th2f clicked
 
-        TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
-        int pointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
-        data->ZoomProj(pointIndex, 20);
-        data->DrawPoint(pointIndex);
+        }
+
+
 
 
 

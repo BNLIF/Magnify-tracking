@@ -46,6 +46,7 @@ public:
     vector<vector<int> >* data_channel;
     vector<vector<int> >* data_time_slice;
     vector<vector<int> >* data_charge;
+    vector<vector<int> >* data_charge_pred;
     std::map<int, int> data_cluster_map; // cluster id => index
 
     vector<int> bad_id;
@@ -71,6 +72,7 @@ public:
     int pad_com_dis;
     int pad_com_dtheta;
     int pad_3d;
+    int pad_pred;
     int currentCluster;
     bool doDrawBadCh;
     TMarker *currentPoint[3];
