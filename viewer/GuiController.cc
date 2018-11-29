@@ -106,7 +106,7 @@ void GuiController::InitConnections()
 //         data->wfs.at(2)->lines.size()
 //     ));
 //     cw->rawWfButton->Connect("Clicked()", "GuiController", this, "UpdateShowRaw()");
-//     cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
+    cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
 
 //     // stupid way to connect signal and slots
 //     vw->can->GetPad(1)->Connect("RangeChanged()", "GuiController", this, "SyncTimeAxis0()");
@@ -167,20 +167,10 @@ void GuiController::ClusterChanged(int i)
 //     }
 // }
 
-// void GuiController::UnZoom()
-// {
-//     cw->timeRangeEntry[0]->SetNumber(0);
-//     cw->timeRangeEntry[1]->SetNumber(data->wfs.at(0)->nTDCs);
-//     cw->adcRangeEntry[0]->SetNumber(0);
-//     cw->adcRangeEntry[1]->SetNumber(0);
-
-//     for (int ind=0; ind<6; ind++) {
-//         data->wfs.at(ind)->hDummy->GetXaxis()->UnZoom();
-//         data->wfs.at(ind)->hDummy->GetYaxis()->UnZoom();
-//         vw->can->GetPad(ind+1)->Modified();
-//         vw->can->GetPad(ind+1)->Update();
-//     }
-// }
+void GuiController::UnZoom()
+{
+    data->ZoomProj(0, -1);
+}
 
 // void GuiController::ZRangeChanged()
 // {

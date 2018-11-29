@@ -69,9 +69,9 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     // group[1]->SetTitle("V Plane");
     // group[2]->SetTitle("W Plane");
 
-    // TGGroupFrame *group_misc = new TGGroupFrame(this, "Range", kHorizontalFrame);
-    // group_misc->SetTitlePos(TGGroupFrame::kLeft);
-    // AddFrame(group_misc, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 1, 1));
+    TGGroupFrame *group_misc = new TGGroupFrame(this, "Range", kHorizontalFrame);
+    group_misc->SetTitlePos(TGGroupFrame::kLeft);
+    AddFrame(group_misc, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 1, 1));
 
     // group_misc->AddFrame(new TGLabel(group_misc, "x range: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
     // for (int i=0; i<2; i++) {
@@ -93,8 +93,8 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     //     group_misc->AddFrame(adcRangeEntry[i], new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
     // }
 
-    // unZoomButton = new TGTextButton(group_misc, "UnZoom");
-    // group_misc->AddFrame(unZoomButton, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 3, 2, 2, 2));
+    unZoomButton = new TGTextButton(group_misc, "UnZoom");
+    group_misc->AddFrame(unZoomButton, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 3, 2, 2, 2));
 
     // group_misc->AddFrame(new TGLabel(group_misc, "color range: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
     // for (int i=0; i<2; i++) {

@@ -27,7 +27,7 @@ public:
     // void TimeChanged();
     void ToggleBadChannel();
     // void UpdateShowRaw();
-    // void UnZoom();
+    void UnZoom();
 
     // void SyncTimeAxis0() { SyncTimeAxis(0); }
     // void SyncTimeAxis1() { SyncTimeAxis(1); }

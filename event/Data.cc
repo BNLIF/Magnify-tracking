@@ -279,20 +279,38 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
     cout << endl;
 
     TH2F *h = (TH2F*)gROOT->FindObject("h_proj_u");
-    h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
-    h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    if (zoomBin<0) {
+        h->GetXaxis()->UnZoom();
+        h->GetYaxis()->UnZoom();
+    }
+    else {
+        h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
+        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    }
     c1->GetPad(pad_proj)->Modified();
     c1->GetPad(pad_proj)->Update();
 
     h = (TH2F*)gROOT->FindObject("h_proj_v");
-    h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
-    h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    if (zoomBin<0) {
+        h->GetXaxis()->UnZoom();
+        h->GetYaxis()->UnZoom();
+    }
+    else {
+        h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
+        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    }
     c1->GetPad(pad_proj+1)->Modified();
     c1->GetPad(pad_proj+1)->Update();
 
     h = (TH2F*)gROOT->FindObject("h_proj_w");
-    h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
-    h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    if (zoomBin<0) {
+        h->GetXaxis()->UnZoom();
+        h->GetYaxis()->UnZoom();
+    }
+    else {
+        h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
+        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    }
     c1->GetPad(pad_proj+2)->Modified();
     c1->GetPad(pad_proj+2)->Update();
 }
