@@ -33,6 +33,7 @@ Data::Data(const char* filename)
     pad_dqdx = 1;
     pad_proj = 4;
     currentCluster = 0;
+    doDrawBadCh = false;
 
     rootFile = 0;
     T_true = 0;
@@ -260,7 +261,7 @@ void Data::DrawProj()
         c1->GetPad(pad)->Update();
     }
 
-
+    DrawBadCh();
 }
 
 void Data::ZoomProj(int pointIndex, int zoomBin)
@@ -315,7 +316,7 @@ void Data::DrawPoint(int pointIndex)
 
 }
 
-void Data::DrawBadCh(bool doDraw)
+void Data::DrawBadCh()
 {
     int size = bad_lines.size();
     for (int pad=pad_proj; pad<pad_proj+3; pad++) {
@@ -326,7 +327,7 @@ void Data::DrawBadCh(bool doDraw)
                 || (pad==pad_proj+1 && bad_id[i]>=2400 && bad_id[i]<4800)
                 || (pad==pad_proj+2 && bad_id[i]>=4800)
             ) {
-                if (doDraw) {
+                if (doDrawBadCh) {
                     bad_lines[i]->Draw();
                 }
                 else {

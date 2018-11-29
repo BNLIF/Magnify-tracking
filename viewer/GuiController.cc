@@ -130,7 +130,8 @@ void GuiController::InitConnections()
 
 void GuiController::ToggleBadChannel()
 {
-    data->DrawBadCh(cw->badChanelButton->IsDown());
+    data->doDrawBadCh = cw->badChanelButton->IsDown();
+    data->DrawBadCh();
 }
 
 void GuiController::SetCurrentCluster(int newCluster)

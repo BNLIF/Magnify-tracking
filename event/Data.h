@@ -67,6 +67,7 @@ public:
     int pad_proj;
     int pad_dqdx;
     int currentCluster;
+    bool doDrawBadCh;
     TMarker *currentPoint[3];
     vector<TLine*> bad_lines;
 
@@ -78,7 +79,7 @@ public:
     void DrawProj();
     void ZoomProj(int pointIndex, int zoomBin);
     void DrawPoint(int pointIndex);
-    void DrawBadCh(bool doDraw);
+    void DrawBadCh();
 
 
 private:
