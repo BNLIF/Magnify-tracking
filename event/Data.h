@@ -66,6 +66,7 @@ public:
     TCanvas *c1;
     int pad_proj;
     int pad_dqdx;
+    int pad_3d;
     int currentCluster;
     bool doDrawBadCh;
     TMarker *currentPoint[3];
@@ -80,6 +81,7 @@ public:
     void ZoomProj(int pointIndex, int zoomBin);
     void DrawPoint(int pointIndex);
     void DrawBadCh();
+    void Draw3D();
 
 
 private:

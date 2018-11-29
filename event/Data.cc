@@ -32,6 +32,7 @@ Data::Data(const char* filename)
     c1 = 0;
     pad_dqdx = 1;
     pad_proj = 4;
+    pad_3d = 7;
     currentCluster = 0;
     doDrawBadCh = false;
 
@@ -313,6 +314,25 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
     }
     c1->GetPad(pad_proj+2)->Modified();
     c1->GetPad(pad_proj+2)->Update();
+
+    // zoom 3D
+    double x =  rec_x->at(currentCluster).at(pointIndex);
+    double y =  rec_y->at(currentCluster).at(pointIndex);
+    double z =  rec_z->at(currentCluster).at(pointIndex);
+    TGraph2D *g = (TGraph2D*)gROOT->FindObject("g_3d");
+    if (zoomBin<0) {
+        g->GetXaxis()->UnZoom();
+        g->GetYaxis()->UnZoom();
+        g->GetZaxis()->UnZoom();
+    }
+    else {
+        g->GetXaxis()->SetRangeUser(x-zoomBin*0.3, x+zoomBin*0.3);
+        g->GetYaxis()->SetRangeUser(y-zoomBin*0.3, y+zoomBin*0.3);
+        g->GetZaxis()->SetRangeUser(z-zoomBin*0.3, z+zoomBin*0.3);
+    }
+    c1->GetPad(pad_3d)->Modified();
+    c1->GetPad(pad_3d)->Update();
+
 }
 
 void Data::DrawPoint(int pointIndex)
@@ -357,8 +377,33 @@ void Data::DrawBadCh()
         p->Modified();
         p->Update();
     }
-
 }
+
+void Data::Draw3D()
+{
+    TGraph2D *g = (TGraph2D*)gROOT->FindObject("g_3d");
+    if (g) {delete g;}
+
+    int nPoints = rec_x->at(currentCluster).size();
+    g = new TGraph2D(nPoints);
+    g->SetName("g_3d");
+    g->SetTitle("");
+    for (int i=0; i<nPoints; i++) {
+        g->SetPoint(i,
+            rec_x->at(currentCluster).at(i),
+            rec_y->at(currentCluster).at(i),
+            rec_z->at(currentCluster).at(i)
+        );
+    }
+    g->GetXaxis()->SetTitle("x [cm]");
+    g->GetYaxis()->SetTitle("y [cm]");
+    g->GetZaxis()->SetTitle("z [cm]");
+    c1->cd(pad_3d);
+    g->Draw("pLINE");
+    c1->GetPad(pad_3d)->Modified();
+    c1->GetPad(pad_3d)->Update();
+}
+
 
 
 
