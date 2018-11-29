@@ -55,12 +55,16 @@ public:
     int nChannel_w;
     int nTime;
 
-    void Project();
+    TCanvas *c1;
+    int pad_proj;
+    int pad_dqdx;
+    int currentCluster;
     void LoadRec();
     void LoadProj();
-    void DrawProjection(int plane);
-    void DrawDQDX(int bin, TCanvas* c1, int padNo=1);
-    void DrawProj(int bin, TCanvas* c1, int padNo=4);
+    void DrawDQDX();
+    void DrawProj();
+    void ZoomProj(int pointIndex, int zoomBin);
+
 
 private:
     void LoadData(const char* filename);

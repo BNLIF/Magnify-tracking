@@ -41,6 +41,9 @@ public:
     // void WfRangeChanged2() { WfRangeChanged(2); }
     // void WfRangeChanged(int i);
 
+    void SetCurrentCluster(int newCluster); // index in the bin, not id
+
+
     TString OpenDialog();
 
     MainWindow *mw;

@@ -28,6 +28,11 @@ Data::Data()
 
 Data::Data(const char* filename)
 {
+    c1 = 0;
+    pad_dqdx = 1;
+    pad_proj = 4;
+    currentCluster = 0;
+
     rootFile = 0;
     T_true = 0;
     T_rec = 0;
@@ -57,7 +62,6 @@ Data::Data(const char* filename)
     data_charge = new vector<vector<int> >;
 
     LoadData(filename);
-    Project();
 }
 
 
@@ -125,32 +129,32 @@ void Data::LoadProj()
     cout << endl;
 }
 
-void Data::DrawDQDX(int bin, TCanvas* c1, int padNo)
+void Data::DrawDQDX()
 {
     TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
     if (g) {
         delete g;
     }
-    int size = rec_dQ->at(bin).size();
+    int size = rec_dQ->at(currentCluster).size();
     g = new TGraph(size);
 
     for (int i=0; i<size; i++) {
-        g->SetPoint(i, rec_L->at(bin).at(i),
-            rec_dQ->at(bin).at(i)/1000/rec_dx->at(bin).at(i));
+        g->SetPoint(i, rec_L->at(currentCluster).at(i),
+            rec_dQ->at(currentCluster).at(i)/1000/rec_dx->at(currentCluster).at(i));
     }
     g->SetName("g_dqdx");
-    g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(bin)));
+    g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
     g->GetXaxis()->SetTitle("Distance [cm]");
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
-    c1->cd(padNo);
+    c1->cd(pad_dqdx);
     g->Draw("ALP");
-    c1->GetPad(padNo)->Modified();
-    c1->GetPad(padNo)->Update();
+    c1->GetPad(pad_dqdx)->Modified();
+    c1->GetPad(pad_dqdx)->Update();
 }
 
-void Data::DrawProj(int bin, TCanvas* c1, int padNo)
+void Data::DrawProj()
 {
-    int cluster_id = rec_cluster_id->at(bin);
+    int cluster_id = rec_cluster_id->at(currentCluster);
     int index = data_cluster_map[cluster_id];
 
     TH2F *h_proj_u = (TH2F*)gROOT->FindObject("h_proj_u");
@@ -167,9 +171,9 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
     if (g_rec_v) { delete g_rec_v;}
     if (g_rec_w) { delete g_rec_w;}
 
-    h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0-0.0, nChannel_u-0.0, nTime, 0-0.0, nTime-0.0);
-    h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.0, nChannel_u+nChannel_v-0.0, nTime, 0-0.0, nTime-0.0);
-    h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.0, nChannel_u+nChannel_v+nChannel_w-0.0, nTime, 0-0.0, nTime-0.0);
+    h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
+    h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
+    h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
 
     TH2F *h[3] = {h_proj_u, h_proj_v, h_proj_w};
     int size = data_channel->at(index).size();
@@ -192,17 +196,17 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
         hc->SetBinContent(x+1, y+1, z);
     }
 
-    int size2 = rec_u->at(bin).size();
+    int size2 = rec_u->at(currentCluster).size();
     g_rec_u = new TGraph(size2);
     g_rec_v = new TGraph(size2);
     g_rec_w = new TGraph(size2);
     TGraph *g[3] = {g_rec_u, g_rec_v, g_rec_w};
 
     for (int i=0; i<size2; i++) {
-        double u = rec_u->at(bin).at(i);
-        double v = rec_v->at(bin).at(i);
-        double w = rec_w->at(bin).at(i);
-        double t = rec_t->at(bin).at(i);
+        double u = rec_u->at(currentCluster).at(i);
+        double v = rec_v->at(currentCluster).at(i);
+        double w = rec_w->at(currentCluster).at(i);
+        double t = rec_t->at(currentCluster).at(i);
         // double q = rec_dQ->at(bin).at(i);
         g_rec_u->SetPoint(i, u, t);
         g_rec_v->SetPoint(i, v, t);
@@ -213,7 +217,7 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
         h[i]->GetXaxis()->SetTitle("Channel");
         h[i]->GetYaxis()->SetTitle("Time Slice");
         h[i]->GetZaxis()->SetRangeUser(500, 20000);
-        int pad = padNo+i;
+        int pad = pad_proj+i;
         c1->cd(pad);
         h[i]->Draw("colz");
         g[i]->SetLineWidth(2);
@@ -226,58 +230,91 @@ void Data::DrawProj(int bin, TCanvas* c1, int padNo)
 
 }
 
-
-void Data::Project()
+void Data::ZoomProj(int pointIndex, int zoomBin)
 {
+    int u =  rec_u->at(currentCluster).at(pointIndex);
+    int v =  rec_v->at(currentCluster).at(pointIndex);
+    int w =  rec_w->at(currentCluster).at(pointIndex);
+    int t =  rec_t->at(currentCluster).at(pointIndex);
 
-    h_proj[0] = new TH2F("h_proj_u", "", nChannel_u, -0.5, nChannel_u-0.5, nTime, 0-0.5, nTime-0.5);
-    h_proj[1] = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.5, nChannel_u+nChannel_v-0.5, nTime, 0-0.5, nTime-0.5);
-    h_proj[2] = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.5, nChannel_u+nChannel_v+nChannel_w-0.5, nTime, 0-0.5, nTime-0.5);
+    cout << " index: " << pointIndex;
+    cout << " u: " << u;
+    cout << " v: " << v;
+    cout << " w: " << w;
+    cout << " t: " << t;
+    cout << endl;
 
-    T_proj_data->Project("h_proj_u", "time_slice:channel", "charge/500", "channel<2400");
-    T_proj_data->Project("h_proj_v", "time_slice:channel", "charge/500", "channel<2400 && channel<4800");
-    T_proj_data->Project("h_proj_w", "time_slice:channel", "charge/500", "channel>4800");
+    TH2F *h = (TH2F*)gROOT->FindObject("h_proj_u");
+    h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
+    h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    c1->GetPad(pad_proj)->Modified();
+    c1->GetPad(pad_proj)->Update();
 
-    //creating boxes
-    int threshold = 0;
-    TBox *box = 0;
-    for (int plane=0; plane<3; plane++) {
-        for (int i=1; i<=nChannel_u; i++) {
-            for (int j=1; j<=nTime; j++) {
-                double content = h_proj[plane]->GetBinContent(i, j);
-                if (TMath::Abs(content)>threshold) {
-                    box = new TBox(
-                        h_proj[plane]->GetXaxis()->GetBinLowEdge(i),
-                        h_proj[plane]->GetYaxis()->GetBinLowEdge(j),
-                        h_proj[plane]->GetXaxis()->GetBinUpEdge(i),
-                        h_proj[plane]->GetYaxis()->GetBinUpEdge(j)
-                    );
-                    box->SetFillColor(kRed);
-                    boxes[plane].push_back(box);
-                    box_values[plane].push_back(TMath::Abs(content));
-                }
-            }
-        }
-        cout << "plane " << plane << ": " << boxes[plane].size() <<  " boxes created. " << endl;
-    }
+    h = (TH2F*)gROOT->FindObject("h_proj_v");
+    h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
+    h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    c1->GetPad(pad_proj+1)->Modified();
+    c1->GetPad(pad_proj+1)->Update();
 
+    h = (TH2F*)gROOT->FindObject("h_proj_w");
+    h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
+    h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
+    c1->GetPad(pad_proj+2)->Modified();
+    c1->GetPad(pad_proj+2)->Update();
 }
 
-void Data::DrawProjection(int plane)
-{
 
-    h_proj[plane]->Clear();
-    h_proj[plane]->Draw("colz");
-    h_proj[plane]->GetZaxis()->SetRangeUser(10, 20);
-    gPad->Update();
+// void Data::Project()
+// {
 
-    TPaletteAxis *palette = (TPaletteAxis*)h_proj[plane]->GetListOfFunctions()->FindObject("palette");
-    int size = boxes[plane].size();
-    for (int i=0; i<size; i++) {
-        boxes[plane][i]->SetFillColor(palette->GetValueColor(box_values[plane][i]));
-        boxes[plane][i]->Draw();
-    }
-}
+//     h_proj[0] = new TH2F("h_proj_u", "", nChannel_u, 1-0.5, nChannel_u-0.5, nTime, 1-0.5, nTime-0.5);
+//     h_proj[1] = new TH2F("h_proj_v", "", nChannel_v, nChannel_u-0.5, nChannel_u+nChannel_v-0.5, nTime, 1-0.5, nTime-0.5);
+//     h_proj[2] = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v-0.5, nChannel_u+nChannel_v+nChannel_w-0.5, nTime, 1-0.5, nTime-0.5);
+
+//     T_proj_data->Project("h_proj_u", "time_slice:channel", "charge/500", "channel<2400");
+//     T_proj_data->Project("h_proj_v", "time_slice:channel", "charge/500", "channel<2400 && channel<4800");
+//     T_proj_data->Project("h_proj_w", "time_slice:channel", "charge/500", "channel>4800");
+
+//     //creating boxes
+//     int threshold = 0;
+//     TBox *box = 0;
+//     for (int plane=0; plane<3; plane++) {
+//         for (int i=1; i<=nChannel_u; i++) {
+//             for (int j=1; j<=nTime; j++) {
+//                 double content = h_proj[plane]->GetBinContent(i, j);
+//                 if (TMath::Abs(content)>threshold) {
+//                     box = new TBox(
+//                         h_proj[plane]->GetXaxis()->GetBinLowEdge(i),
+//                         h_proj[plane]->GetYaxis()->GetBinLowEdge(j),
+//                         h_proj[plane]->GetXaxis()->GetBinUpEdge(i),
+//                         h_proj[plane]->GetYaxis()->GetBinUpEdge(j)
+//                     );
+//                     box->SetFillColor(kRed);
+//                     boxes[plane].push_back(box);
+//                     box_values[plane].push_back(TMath::Abs(content));
+//                 }
+//             }
+//         }
+//         cout << "plane " << plane << ": " << boxes[plane].size() <<  " boxes created. " << endl;
+//     }
+
+// }
+
+// void Data::DrawProjection(int plane)
+// {
+
+//     h_proj[plane]->Clear();
+//     h_proj[plane]->Draw("colz");
+//     h_proj[plane]->GetZaxis()->SetRangeUser(10, 20);
+//     gPad->Update();
+
+//     TPaletteAxis *palette = (TPaletteAxis*)h_proj[plane]->GetListOfFunctions()->FindObject("palette");
+//     int size = boxes[plane].size();
+//     for (int i=0; i<size; i++) {
+//         boxes[plane][i]->SetFillColor(palette->GetValueColor(box_values[plane][i]));
+//         boxes[plane][i]->Draw();
+//     }
+// }
 
 
 Data::~Data()

@@ -31,7 +31,6 @@ using namespace std;
 
 GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn)
 {
-    currentCluster = 0;
     mw = new MainWindow(p, w, h);
     vw = mw->fViewWindow;
     cw = mw->fControlWindow;
@@ -44,6 +43,10 @@ GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn)
         filename = fn;
     }
     data = new Data(filename.Data());
+    data->c1 = vw->can;
+    SetCurrentCluster(0);
+
+
     // mw->SetWindowName(TString::Format("Magnify: run %i, sub-run %i, event %i",
     //     data->runNo, data->subRunNo, data->eventNo));
 
@@ -60,16 +63,12 @@ GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn)
     //     hCurrent[i] = h;
     // }
 
-    data->DrawDQDX(currentCluster, vw->can);
-    data->DrawProj(currentCluster, vw->can);
 
-    // for (int i=0; i<3; i++) {
-    //     vw->can->cd(i+4);
-    //     data->DrawProj(0);
-    // }
-
+    data->DrawDQDX();
+    data->DrawProj();
 
     InitConnections();
+
 }
 
 GuiController::~GuiController()
@@ -150,24 +149,22 @@ void GuiController::InitConnections()
 
 // }
 
+void GuiController::SetCurrentCluster(int newCluster)
+{
+    cout << "new cluster: " << newCluster << endl;
+    currentCluster = newCluster;
+    data->currentCluster = currentCluster;
+}
+
 void GuiController::ClusterChanged(int i)
 {
     int newCluster = cw->clusterEntry->GetNumber();
     if (newCluster == currentCluster) return;
-    cout << "new cluster: " << newCluster << endl;
+    SetCurrentCluster(newCluster);
 
-    data->DrawDQDX(newCluster, vw->can);
-    data->DrawProj(newCluster, vw->can);
+    data->DrawDQDX();
+    data->DrawProj();
 
-    currentCluster = newCluster;
-
-    // for (int ind=i; ind<6; ind+=3) {
-    //     vw->can->cd(ind+1);
-    //     data->wfs.at(ind)->SetThreshold(newThresh);
-    //     data->wfs.at(ind)->Draw2D();
-    //     vw->can->GetPad(ind+1)->Modified();
-    //     vw->can->GetPad(ind+1)->Update();
-    // }
 }
 
 // void GuiController::SetChannelThreshold()
@@ -376,36 +373,10 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
         cout << "pad " << padNo << ": (" << xx << ", " << yy << ")";
 
         TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
-        int index = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
-        int u =  data->rec_u->at(currentCluster).at(index);
-        int v =  data->rec_v->at(currentCluster).at(index);
-        int w =  data->rec_w->at(currentCluster).at(index);
-        int t =  data->rec_t->at(currentCluster).at(index);
+        int pointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
+        data->ZoomProj(pointIndex, 20);
 
-        cout << " index: " << index;
-        cout << " u: " << u;
-        cout << " v: " << v;
-        cout << " w: " << w;
-        cout << " t: " << t;
-        cout << endl;
 
-        TH2F *h = (TH2F*)gROOT->FindObject("h_proj_u");
-        h->GetXaxis()->SetRangeUser(u-50, u+50);
-        h->GetYaxis()->SetRangeUser(t-50, t+50);
-        vw->can->GetPad(4)->Modified();
-        vw->can->GetPad(4)->Update();
-
-        h = (TH2F*)gROOT->FindObject("h_proj_v");
-        h->GetXaxis()->SetRangeUser(v-50, v+50);
-        h->GetYaxis()->SetRangeUser(t-50, t+50);
-        vw->can->GetPad(5)->Modified();
-        vw->can->GetPad(5)->Update();
-
-        h = (TH2F*)gROOT->FindObject("h_proj_w");
-        h->GetXaxis()->SetRangeUser(w-50, w+50);
-        h->GetYaxis()->SetRangeUser(t-50, t+50);
-        vw->can->GetPad(6)->Modified();
-        vw->can->GetPad(6)->Update();
 
     //     int drawPad = (padNo-1) % 3 + 7;
     //     vw->can->cd(drawPad);
