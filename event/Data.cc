@@ -31,6 +31,8 @@ Data::Data(const char* filename)
 {
     c1 = 0;
     pad_dqdx = 1;
+    pad_com_dis = 2;
+    pad_com_dtheta = 3;
     pad_proj = 4;
     pad_3d = 7;
     currentCluster = 0;
@@ -58,6 +60,8 @@ Data::Data(const char* filename)
     rec_v  = new vector<vector<double> >;
     rec_w  = new vector<vector<double> >;
     rec_t  = new vector<vector<double> >;
+    com_dis  = new vector<vector<double> >;
+    com_dtheta  = new vector<vector<double> >;
 
     data_cluster_id = new vector<int>;
     data_channel = new vector<vector<int> >;
@@ -111,6 +115,10 @@ void Data::LoadRec()
     T_rec->SetBranchAddress("rec_v", &rec_v);
     T_rec->SetBranchAddress("rec_w", &rec_w);
     T_rec->SetBranchAddress("rec_t", &rec_t);
+    if (!isData) {
+        T_rec->SetBranchAddress("com_dis", &com_dis);
+        T_rec->SetBranchAddress("com_dtheta", &com_dtheta);
+    }
 
     T_rec->GetEntry(0);
     nCluster = rec_cluster_id->size();
@@ -179,12 +187,60 @@ void Data::DrawDQDX()
     }
     g->SetName("g_dqdx");
     g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
-    g->GetXaxis()->SetTitle("Distance [cm]");
+    g->GetXaxis()->SetTitle("Distance from start  [cm]");
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
     c1->cd(pad_dqdx);
     g->Draw("ALP");
     c1->GetPad(pad_dqdx)->Modified();
     c1->GetPad(pad_dqdx)->Update();
+}
+
+void Data::DrawComDis()
+{
+    if (isData) return;
+
+    TGraph *g = (TGraph*)gROOT->FindObject("g_com_dis");
+    if (g) {
+        delete g;
+    }
+    int size = com_dis->at(currentCluster).size();
+    g = new TGraph(size);
+
+    for (int i=0; i<size; i++) {
+        g->SetPoint(i, rec_L->at(currentCluster).at(i), com_dis->at(currentCluster).at(i));
+    }
+    g->SetName("g_com_dis");
+    g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
+    g->GetXaxis()->SetTitle("Distance from start [cm]");
+    g->GetYaxis()->SetTitle("Distance (Data - MC) [cm]");
+    c1->cd(pad_com_dis);
+    g->Draw("ALP");
+    c1->GetPad(pad_com_dis)->Modified();
+    c1->GetPad(pad_com_dis)->Update();
+}
+
+void Data::DrawComDtheta()
+{
+    if (isData) return;
+
+    TGraph *g = (TGraph*)gROOT->FindObject("g_com_dtheta");
+    if (g) {
+        delete g;
+    }
+    int size = com_dis->at(currentCluster).size();
+    g = new TGraph(size);
+
+    for (int i=0; i<size; i++) {
+        g->SetPoint(i, rec_L->at(currentCluster).at(i), com_dtheta->at(currentCluster).at(i));
+    }
+    g->SetName("g_com_dtheta");
+    g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
+    g->GetXaxis()->SetTitle("Distance from start [cm]");
+    g->GetYaxis()->SetTitle("#Delta#theta (Data - MC)");
+    c1->cd(pad_com_dtheta);
+    g->Draw("ALP");
+    c1->GetPad(pad_com_dtheta)->Modified();
+    c1->GetPad(pad_com_dtheta)->Update();
 }
 
 void Data::DrawProj()
@@ -407,6 +463,8 @@ void Data::Draw3D()
 void Data::DrawNewCluster()
 {
     DrawDQDX();
+    DrawComDis();
+    DrawComDtheta();
     DrawProj();
     DrawPoint(0);
     Draw3D();

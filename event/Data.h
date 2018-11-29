@@ -38,6 +38,8 @@ public:
     vector<vector<double> >* rec_v;
     vector<vector<double> >* rec_w;
     vector<vector<double> >* rec_t;
+    vector<vector<double> >* com_dis;
+    vector<vector<double> >* com_dtheta;
     int nCluster;
 
     vector<int> *data_cluster_id;
@@ -66,6 +68,8 @@ public:
     TCanvas *c1;
     int pad_proj;
     int pad_dqdx;
+    int pad_com_dis;
+    int pad_com_dtheta;
     int pad_3d;
     int currentCluster;
     bool doDrawBadCh;
@@ -82,6 +86,8 @@ public:
     void DrawPoint(int pointIndex);
     void DrawBadCh();
     void Draw3D();
+    void DrawComDis();
+    void DrawComDtheta();
 
     void DrawNewCluster();
 
