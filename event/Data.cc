@@ -390,14 +390,14 @@ void Data::Draw3D()
     g->SetTitle("");
     for (int i=0; i<nPoints; i++) {
         g->SetPoint(i,
+            rec_z->at(currentCluster).at(i),
             rec_x->at(currentCluster).at(i),
-            rec_y->at(currentCluster).at(i),
-            rec_z->at(currentCluster).at(i)
+            rec_y->at(currentCluster).at(i)
         );
     }
-    g->GetXaxis()->SetTitle("x [cm]");
-    g->GetYaxis()->SetTitle("y [cm]");
-    g->GetZaxis()->SetTitle("z [cm]");
+    g->GetXaxis()->SetTitle("z [cm]");
+    g->GetYaxis()->SetTitle("x [cm]");
+    g->GetZaxis()->SetTitle("y [cm]");
     c1->cd(pad_3d);
     g->Draw("pLINE");
     c1->GetPad(pad_3d)->Modified();

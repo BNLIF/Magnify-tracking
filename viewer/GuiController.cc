@@ -66,6 +66,7 @@ GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn)
 
     data->DrawDQDX();
     data->DrawProj();
+    data->DrawPoint(0);
     data->Draw3D();
 
     InitConnections();
@@ -150,6 +151,7 @@ void GuiController::ClusterChanged(int i)
 
     data->DrawDQDX();
     data->DrawProj();
+    data->DrawPoint(0);
     data->Draw3D();
 
 }
