@@ -20,7 +20,7 @@ public:
     // TGNumberEntry *zAxisRangeEntry[2];
     // TGNumberEntry *timeRangeEntry[2];
     // TGNumberEntry *adcRangeEntry[2];
-    // TGCheckButton *badChanelButton;
+    TGCheckButton *badChanelButton;
     // TGCheckButton *timeModeButton;
 
     // TGCheckButton *rawWfButton;

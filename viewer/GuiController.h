@@ -25,7 +25,7 @@ public:
     // void ZRangeChanged();
     // void ChannelChanged();
     // void TimeChanged();
-    // void UpdateShowBadChannel();
+    void ToggleBadChannel();
     // void UpdateShowRaw();
     // void UnZoom();
 

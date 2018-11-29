@@ -99,7 +99,7 @@ void GuiController::InitConnections()
 
 //     cw->channelEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ChannelChanged()");
 //     cw->timeEntry->Connect("ValueSet(Long_t)", "GuiController", this, "TimeChanged()");
-//     cw->badChanelButton->Connect("Clicked()", "GuiController", this, "UpdateShowBadChannel()");
+    cw->badChanelButton->Connect("Clicked()", "GuiController", this, "ToggleBadChannel()");
 //     cw->badChanelButton->SetToolTipText(TString::Format("U: %lu, V: %lu, Y: %lu",
 //         data->wfs.at(0)->lines.size(),
 //         data->wfs.at(1)->lines.size(),
@@ -128,26 +128,10 @@ void GuiController::InitConnections()
     );
 }
 
-// void GuiController::UpdateShowBadChannel()
-// {
-//     if (cw->badChanelButton->IsDown()) {
-//         for (int ind=0; ind<6; ind++) {
-//             vw->can->cd(ind+1);
-//             data->wfs.at(ind)->DrawLines();
-//             vw->can->GetPad(ind+1)->Modified();
-//             vw->can->GetPad(ind+1)->Update();
-//         }
-//     }
-//     else {
-//         for (int ind=0; ind<6; ind++) {
-//             vw->can->cd(ind+1);
-//             data->wfs.at(ind)->HideLines();
-//             vw->can->GetPad(ind+1)->Modified();
-//             vw->can->GetPad(ind+1)->Update();
-//         }
-//     }
-
-// }
+void GuiController::ToggleBadChannel()
+{
+    data->DrawBadCh(cw->badChanelButton->IsDown());
+}
 
 void GuiController::SetCurrentCluster(int newCluster)
 {

@@ -85,12 +85,14 @@ void Data::LoadData(const char* filename)
     T_rec = (TTree*)rootFile->Get("T_rec");
     T_proj = (TTree*)rootFile->Get("T_proj");
     T_proj_data = (TTree*)rootFile->Get("T_proj_data");
+    T_bad_ch = (TTree*)rootFile->Get("T_bad_ch");
 
     isData = T_true? false : true;
     cout << "loading data? " << isData << endl;
 
     LoadRec();
     LoadProj();
+    LoadBadCh();
 
 }
 
@@ -134,6 +136,30 @@ void Data::LoadProj()
         cout << id << " ";
     }
     cout << endl;
+}
+
+void Data::LoadBadCh()
+{
+    if (!T_bad_ch) {
+        cout << "no bad channles in the file ..." << endl;
+        return;
+    }
+    int chid, start, end;
+    TLine *line = 0;
+    T_bad_ch->SetBranchAddress("chid", &chid);
+    T_bad_ch->SetBranchAddress("start_time", &start);
+    T_bad_ch->SetBranchAddress("end_time", &end);
+    int nEntries = T_bad_ch->GetEntries();
+    double rebin = 4;
+    for (int i=0; i<nEntries; i++) {
+        T_bad_ch->GetEntry(i);
+        bad_id.push_back(chid);
+        bad_start.push_back(start);
+        bad_end.push_back(end);
+        line = new TLine(chid, start/rebin, chid, end/rebin);
+        line->SetLineColorAlpha(kGray, 0.5);
+        bad_lines.push_back(line);
+    }
 }
 
 void Data::DrawDQDX()
@@ -288,6 +314,33 @@ void Data::DrawPoint(int pointIndex)
     }
 
 }
+
+void Data::DrawBadCh(bool doDraw)
+{
+    int size = bad_lines.size();
+    for (int pad=pad_proj; pad<pad_proj+3; pad++) {
+        c1->cd(pad);
+        TVirtualPad *p = c1->GetPad(pad);
+        for (int i=0; i<size; i++) {
+            if ( (pad==pad_proj && bad_id[i]<2400)
+                || (pad==pad_proj+1 && bad_id[i]>=2400 && bad_id[i]<4800)
+                || (pad==pad_proj+2 && bad_id[i]>=4800)
+            ) {
+                if (doDraw) {
+                    bad_lines[i]->Draw();
+                }
+                else {
+                   p->GetListOfPrimitives()->Remove(bad_lines[i]);
+                }
+
+            }
+        }
+        p->Modified();
+        p->Update();
+    }
+
+}
+
 
 
 

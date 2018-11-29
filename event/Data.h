@@ -10,6 +10,7 @@ class TH2F;
 class TBox;
 class TCanvas;
 class TMarker;
+class TLine;
 
 class Data {
 public:
@@ -24,6 +25,7 @@ public:
     TTree *T_rec;
     TTree *T_proj;
     TTree *T_proj_data;
+    TTree *T_bad_ch;
 
     vector<int> *rec_cluster_id;
     vector<vector<double> >* rec_x;
@@ -44,6 +46,11 @@ public:
     vector<vector<int> >* data_charge;
     std::map<int, int> data_cluster_map; // cluster id => index
 
+    vector<int> bad_id;
+    vector<int> bad_start;
+    vector<int> bad_end;
+
+
 
     // TH2F *h_proj[3];
     // std::vector<TBox*> boxes[3];
@@ -61,12 +68,17 @@ public:
     int pad_dqdx;
     int currentCluster;
     TMarker *currentPoint[3];
+    vector<TLine*> bad_lines;
+
     void LoadRec();
     void LoadProj();
+    void LoadBadCh();
+
     void DrawDQDX();
     void DrawProj();
     void ZoomProj(int pointIndex, int zoomBin);
     void DrawPoint(int pointIndex);
+    void DrawBadCh(bool doDraw);
 
 
 private:
