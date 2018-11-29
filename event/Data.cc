@@ -326,9 +326,9 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
         g->GetZaxis()->UnZoom();
     }
     else {
-        g->GetXaxis()->SetRangeUser(x-zoomBin*0.3, x+zoomBin*0.3);
-        g->GetYaxis()->SetRangeUser(y-zoomBin*0.3, y+zoomBin*0.3);
-        g->GetZaxis()->SetRangeUser(z-zoomBin*0.3, z+zoomBin*0.3);
+        g->GetXaxis()->SetRangeUser(z-zoomBin*0.3, z+zoomBin*0.3);
+        g->GetYaxis()->SetRangeUser(x-zoomBin*0.3, x+zoomBin*0.3);
+        g->GetZaxis()->SetRangeUser(y-zoomBin*0.3, y+zoomBin*0.3);
     }
     c1->GetPad(pad_3d)->Modified();
     c1->GetPad(pad_3d)->Update();
@@ -404,6 +404,13 @@ void Data::Draw3D()
     c1->GetPad(pad_3d)->Update();
 }
 
+void Data::DrawNewCluster()
+{
+    DrawDQDX();
+    DrawProj();
+    DrawPoint(0);
+    Draw3D();
+}
 
 
 

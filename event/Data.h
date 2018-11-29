@@ -83,6 +83,8 @@ public:
     void DrawBadCh();
     void Draw3D();
 
+    void DrawNewCluster();
+
 
 private:
     void LoadData(const char* filename);
