@@ -72,6 +72,7 @@ Data::Data(const char* filename)
     data_time_slice = new vector<vector<int> >;
     data_charge = new vector<vector<int> >;
     data_charge_pred = new vector<vector<int> >;;
+    data_charge_err = new vector<vector<int> >;;
 
 
     for (int i=0; i<3; i++) {
@@ -143,6 +144,7 @@ void Data::LoadProj()
     T_proj_data->SetBranchAddress("time_slice", &data_time_slice);
     T_proj_data->SetBranchAddress("charge", &data_charge);
     T_proj_data->SetBranchAddress("charge_pred", &data_charge_pred);
+    T_proj_data->SetBranchAddress("charge_err", &data_charge_err);
 
     T_proj_data->GetEntry(0);
     int size = data_cluster_id->size();
@@ -310,7 +312,9 @@ void Data::DrawProj()
         int y = data_time_slice->at(index).at(i);
         int z = data_charge->at(index).at(i);
         double charge_pred = data_charge_pred->at(index).at(i);
-        double z_pred = (charge_pred-z+0.01)/(z+0.01);
+        double z_pred = TMath::Abs(charge_pred-z+0.01)/(z+0.01);
+        // double z_pred = TMath::Abs(charge_pred-z+0.01);
+        // double z_pred = abs(charge_pred-z+0.01)/(data_charge_err->at(index).at(i)+0.01);
         if (x<nChannel_u) {
             hc = h_proj_u;
             hp = h_pred_u;
@@ -363,6 +367,9 @@ void Data::DrawProj()
         hpred[i]->GetXaxis()->SetTitle("Channel");
         hpred[i]->GetYaxis()->SetTitle("Time Slice");
         hpred[i]->GetZaxis()->SetRangeUser(0.01, 1);
+        // hpred[i]->GetZaxis()->SetRangeUser(-1, 1);
+        // hpred[i]->GetZaxis()->SetRangeUser(100, 2000);
+
         pad = pad_pred+i;
         c1->cd(pad);
         hpred[i]->Draw("colz");

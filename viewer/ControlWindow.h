@@ -14,7 +14,7 @@ public:
     virtual ~ControlWindow();
 
     TGNumberEntry *clusterEntry;
-    // TGNumberEntry *timeEntry;
+    TGNumberEntry *zoomEntry;
 
     // TGNumberEntry *threshEntry[3];
     // TGNumberEntry *zAxisRangeEntry[2];

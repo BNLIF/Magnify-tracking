@@ -39,13 +39,7 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     // threshScaleEntry->SetNumber(1);
     // group_general->AddFrame(threshScaleEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
-    // group_general->AddFrame(new TGLabel(group_general, "tick: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
-    // timeEntry = new TGNumberEntry(group_general, 0, 5, -1,
-    //     TGNumberFormat::kNESInteger,
-    //     TGNumberFormat::kNEANonNegative,
-    //     TGNumberFormat::kNELLimitMinMax,
-    //     0, 8255);
-    // group_general->AddFrame(timeEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
+
 
     // timeModeButton = new TGCheckButton(group_general, "time mode  ");
     // timeModeButton->SetState(kButtonUp);
@@ -72,6 +66,14 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     TGGroupFrame *group_misc = new TGGroupFrame(this, "Range", kHorizontalFrame);
     group_misc->SetTitlePos(TGGroupFrame::kLeft);
     AddFrame(group_misc, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 1, 1));
+
+    group_misc->AddFrame(new TGLabel(group_misc, "zoom +- 10x: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
+    zoomEntry = new TGNumberEntry(group_misc, 2, 5, -1,
+        TGNumberFormat::kNESInteger,
+        TGNumberFormat::kNEANonNegative,
+        TGNumberFormat::kNELLimitMinMax,
+        1, 100);
+    group_misc->AddFrame(zoomEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
     // group_misc->AddFrame(new TGLabel(group_misc, "x range: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
     // for (int i=0; i<2; i++) {

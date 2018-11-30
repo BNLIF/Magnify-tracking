@@ -21,25 +21,11 @@ public:
     void HandleMenu(int id);
     void ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *selected);
     void ClusterChanged(int i);
-    // void SetChannelThreshold();
     // void ZRangeChanged();
     // void ChannelChanged();
-    // void TimeChanged();
+    void ZoomChanged();
     void ToggleBadChannel();
-    // void UpdateShowRaw();
     void UnZoom();
-
-    // void SyncTimeAxis0() { SyncTimeAxis(0); }
-    // void SyncTimeAxis1() { SyncTimeAxis(1); }
-    // void SyncTimeAxis2() { SyncTimeAxis(2); }
-    // void SyncTimeAxis3() { SyncTimeAxis(3); }
-    // void SyncTimeAxis4() { SyncTimeAxis(4); }
-    // void SyncTimeAxis5() { SyncTimeAxis(5); }
-    // void SyncTimeAxis(int i);
-    // void WfRangeChanged0() { WfRangeChanged(0); }
-    // void WfRangeChanged1() { WfRangeChanged(1); }
-    // void WfRangeChanged2() { WfRangeChanged(2); }
-    // void WfRangeChanged(int i);
 
     void SetCurrentCluster(int newCluster); // index in the bin, not id
 
@@ -51,7 +37,7 @@ public:
     ControlWindow *cw;
     Data *data;
     int currentCluster;
-    // TH1F *hCurrent[3];
+    int currentPointIndex;
 };
 
 #endif

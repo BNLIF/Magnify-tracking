@@ -47,6 +47,7 @@ public:
     vector<vector<int> >* data_time_slice;
     vector<vector<int> >* data_charge;
     vector<vector<int> >* data_charge_pred;
+    vector<vector<int> >* data_charge_err;
     std::map<int, int> data_cluster_map; // cluster id => index
 
     vector<int> bad_id;
