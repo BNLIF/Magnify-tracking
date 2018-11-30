@@ -46,6 +46,7 @@ Data::Data(const char* filename)
     T_rec = 0;
     T_proj = 0;
     T_proj_data = 0;
+    T_bad_ch = 0;
 
     nChannel_u = 2400;
     nChannel_v = 2400;
@@ -70,6 +71,8 @@ Data::Data(const char* filename)
     data_channel = new vector<vector<int> >;
     data_time_slice = new vector<vector<int> >;
     data_charge = new vector<vector<int> >;
+    data_charge_pred = new vector<vector<int> >;;
+
 
     for (int i=0; i<3; i++) {
         currentPoint[i] = new TMarker(0, 0, 24);
