@@ -328,7 +328,7 @@ void Data::DrawProj()
         g_rec_w->SetPoint(i, w, t);
     }
     for (int i=0; i<3; i++) {
-        h[i]->SetTitle(TString::Format("cluster %i", cluster_id));
+        h[i]->SetTitle("Measured Charge");
         h[i]->GetXaxis()->SetTitle("Channel");
         h[i]->GetYaxis()->SetTitle("Time Slice");
         h[i]->GetZaxis()->SetRangeUser(500, 20000);
@@ -348,6 +348,7 @@ void Data::DrawProj()
         pad = pad_pred+i;
         c1->cd(pad);
         hpred[i]->Draw("colz");
+        g[i]->Draw("LPsame");
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
     }
@@ -474,6 +475,11 @@ void Data::DrawPoint(int pointIndex)
         c1->cd(pad_proj+i);
         currentPoint[i]->SetX(x[i]);
         currentPoint[i]->SetY(t);
+        currentPoint[i]->Draw();
+        c1->GetPad(pad_proj+i)->Modified();
+        c1->GetPad(pad_proj+i)->Update();
+
+        c1->cd(pad_pred+i);
         currentPoint[i]->Draw();
         c1->GetPad(pad_proj+i)->Modified();
         c1->GetPad(pad_proj+i)->Update();
