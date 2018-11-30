@@ -1,5 +1,5 @@
 void Magnify(const char* filename="../data/track_com_mc.root");
-void Magnify(const char* filename=0)
+void Magnify(const char* filename)
 {
     // Data *data = new Data(filename);
 
