@@ -69,8 +69,7 @@ public:
     TCanvas *c1;
     int pad_proj;
     int pad_dqdx;
-    int pad_com_dis;
-    int pad_com_dtheta;
+    int pad_mc_compare;
     int pad_3d;
     int pad_pred;
     int currentCluster;
@@ -88,8 +87,7 @@ public:
     void DrawPoint(int pointIndex);
     void DrawBadCh();
     void Draw3D();
-    void DrawComDis();
-    void DrawComDtheta();
+    void DrawMCCompare();
 
     void DrawNewCluster();
 

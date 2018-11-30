@@ -15,6 +15,9 @@
 #include "TGraph2D.h"
 #include "TCanvas.h"
 #include "TMarker.h"
+#include "TGaxis.h"
+#include "TLegend.h"
+#include "TLegendEntry.h"
 
 #include <vector>
 #include <string>
@@ -31,8 +34,7 @@ Data::Data(const char* filename)
 {
     c1 = 0;
     pad_dqdx = 1;
-    pad_com_dis = 2;
-    pad_com_dtheta = 3;
+    pad_mc_compare = 2;
     pad_proj = 4;
     pad_3d = 3;
     pad_pred = 7;
@@ -180,6 +182,8 @@ void Data::DrawDQDX()
     if (g) {
         delete g;
     }
+    TVirtualPad *pad = c1->GetPad(pad_dqdx);
+
     int size = rec_dQ->at(currentCluster).size();
     g = new TGraph(size);
 
@@ -188,24 +192,44 @@ void Data::DrawDQDX()
             rec_dQ->at(currentCluster).at(i)/1000/rec_dx->at(currentCluster).at(i));
     }
     g->SetName("g_dqdx");
-    g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
+    g->SetTitle(TString::Format("cluster id %i (index %i)", rec_cluster_id->at(currentCluster), currentCluster));
     g->GetXaxis()->SetTitle("Distance from start  [cm]");
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
     c1->cd(pad_dqdx);
     g->Draw("ALP");
-    c1->GetPad(pad_dqdx)->Modified();
-    c1->GetPad(pad_dqdx)->Update();
+    pad->SetGridx();
+    pad->SetGridy();
+    pad->Modified();
+    pad->Update();
 }
 
-void Data::DrawComDis()
+void Data::DrawMCCompare()
 {
     if (isData) return;
+    c1->cd(pad_mc_compare);
+    TVirtualPad *pad = c1->GetPad(pad_mc_compare);
+
+    TGraph *g_com_dtheta = (TGraph*)gROOT->FindObject("g_com_dtheta");
+    if (g_com_dtheta) {
+        delete g_com_dtheta;
+    }
+    int size = com_dtheta->at(currentCluster).size();
+    g_com_dtheta = new TGraph(size);
+
+    for (int i=0; i<size; i++) {
+        g_com_dtheta->SetPoint(i, rec_L->at(currentCluster).at(i), com_dtheta->at(currentCluster).at(i));
+    }
+    g_com_dtheta->SetName("g_com_dtheta");
+    g_com_dtheta->SetTitle("Difference to MC");
+    g_com_dtheta->GetXaxis()->SetTitle("Distance from start [cm]");
+    g_com_dtheta->GetYaxis()->SetTitle("");
+    g_com_dtheta->Draw("ALP");
 
     TGraph *g = (TGraph*)gROOT->FindObject("g_com_dis");
     if (g) {
         delete g;
     }
-    int size = com_dis->at(currentCluster).size();
+    size = com_dis->at(currentCluster).size();
     g = new TGraph(size);
 
     for (int i=0; i<size; i++) {
@@ -213,37 +237,28 @@ void Data::DrawComDis()
     }
     g->SetName("g_com_dis");
     g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
-    g->GetXaxis()->SetTitle("Distance from start [cm]");
-    g->GetYaxis()->SetTitle("Distance (Data - MC) [cm]");
-    c1->cd(pad_com_dis);
-    g->Draw("ALP");
-    c1->GetPad(pad_com_dis)->Modified();
-    c1->GetPad(pad_com_dis)->Update();
+    g->SetLineColor(kRed);
+    g->SetMarkerColor(kRed);
+    // g->GetYaxis()->SetTitle("Distance (Data - MC) [cm]");
+    g->Draw("LPsame");
+    // TGaxis *axis = new TGaxis(pad->GetUxmax(), pad->GetUymin(), pad->GetUxmax(), pad->GetUymax(),
+    //     pad->GetUymin(), pad->GetUymax(), 510,"+L");
+    // axis->SetLineColor(kRed);
+    // axis->Draw();
+    TLegend *leg = new TLegend(0.67, 0.67, 0.87, 0.87);
+    TLegendEntry *l1 = leg->AddEntry(g_com_dtheta, "angle", "l");
+    l1->SetTextColor(kBlack);
+    TLegendEntry *l2 = leg->AddEntry(g, "distance", "l");
+    l2->SetTextColor(kRed);
+    leg->Draw();
+
+    pad->SetGridx();
+    pad->SetGridy();
+    pad->Modified();
+    pad->Update();
+
 }
 
-void Data::DrawComDtheta()
-{
-    if (isData) return;
-
-    TGraph *g = (TGraph*)gROOT->FindObject("g_com_dtheta");
-    if (g) {
-        delete g;
-    }
-    int size = com_dis->at(currentCluster).size();
-    g = new TGraph(size);
-
-    for (int i=0; i<size; i++) {
-        g->SetPoint(i, rec_L->at(currentCluster).at(i), com_dtheta->at(currentCluster).at(i));
-    }
-    g->SetName("g_com_dtheta");
-    g->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
-    g->GetXaxis()->SetTitle("Distance from start [cm]");
-    g->GetYaxis()->SetTitle("#Delta#theta (Data - MC)");
-    c1->cd(pad_com_dtheta);
-    g->Draw("ALP");
-    c1->GetPad(pad_com_dtheta)->Modified();
-    c1->GetPad(pad_com_dtheta)->Update();
-}
 
 void Data::DrawProj()
 {
@@ -540,7 +555,7 @@ void Data::Draw3D()
 void Data::DrawNewCluster()
 {
     DrawDQDX();
-    DrawComDis();
+    DrawMCCompare();
     // DrawComDtheta();
     DrawProj();
     DrawPoint(0);
@@ -592,7 +607,7 @@ void Data::DrawNewCluster()
 //     h_proj[plane]->Clear();
 //     h_proj[plane]->Draw("colz");
 //     h_proj[plane]->GetZaxis()->SetRangeUser(10, 20);
-//     gPad->Update();
+//     pad->Update();
 
 //     TPaletteAxis *palette = (TPaletteAxis*)h_proj[plane]->GetListOfFunctions()->FindObject("palette");
 //     int size = boxes[plane].size();
