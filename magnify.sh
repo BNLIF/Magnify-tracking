@@ -8,7 +8,7 @@ if [[ "$rootfile" =~ :// ]] ; then
 else
     rootfile=$(readlink -f "$rootfile")
 fi
-# frame="${1:-decon}"
+sign="${1:-0}"
 # startdir=$(pwd)
 # rebin="${2:-4}"
 
@@ -20,4 +20,4 @@ cd $magnify_source/scripts
 # echo $frame
 # echo $rebin
 
-root -l loadClasses.C Magnify.C'("'"$rootfile"'")'
+root -l loadClasses.C Magnify.C'("'"$rootfile"'", '$sign')'

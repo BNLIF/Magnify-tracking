@@ -14,7 +14,7 @@ class GuiController
 {
     RQ_OBJECT("GuiController")
 public:
-    GuiController(const TGWindow *p, int w, int h, const char* filename=0);
+    GuiController(const TGWindow *p, int w, int h, const char* filename=0, int sign=0);
     virtual ~GuiController();
 
     void InitConnections();

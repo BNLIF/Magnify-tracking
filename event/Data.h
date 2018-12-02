@@ -15,11 +15,12 @@ class TLine;
 class Data {
 public:
     Data();
-    Data(const char* filename);
+    Data(const char* filename, int sign=0);
 
     virtual ~Data();
 
     TFile *rootFile;
+    int sign;
 
     TTree *T_true;
     TTree *T_rec;

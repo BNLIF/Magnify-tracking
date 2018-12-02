@@ -1,5 +1,5 @@
 # Magnify-tracking
 
 ```
-./magnify [file]
+./magnify [file] [sign]
 ```

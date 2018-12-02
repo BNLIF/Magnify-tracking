@@ -29,7 +29,7 @@
 using namespace std;
 
 
-GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn)
+GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn, int sign)
 {
     mw = new MainWindow(p, w, h);
     vw = mw->fViewWindow;
@@ -44,7 +44,7 @@ GuiController::GuiController(const TGWindow *p, int w, int h, const char* fn)
     else {
         filename = fn;
     }
-    data = new Data(filename.Data());
+    data = new Data(filename.Data(), sign);
     data->c1 = vw->can;
     SetCurrentCluster(0);
     data->DrawNewCluster();

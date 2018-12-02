@@ -30,8 +30,9 @@ using namespace std;
 Data::Data()
 {}
 
-Data::Data(const char* filename)
+Data::Data(const char* filename, int sign)
 {
+    this->sign = sign;
     c1 = 0;
     pad_dqdx = 1;
     pad_mc_compare = 2;
@@ -312,7 +313,17 @@ void Data::DrawProj()
         int y = data_time_slice->at(index).at(i);
         int z = data_charge->at(index).at(i);
         double charge_pred = data_charge_pred->at(index).at(i);
-        double z_pred = TMath::Abs(charge_pred-z+0.01)/(z+0.01);
+        double z_pred = (charge_pred-z+0.01)/(z+0.01);
+        if (sign == 0) {
+            z_pred = TMath::Abs(z_pred);
+        }
+        else if (sign>0) {
+            if (z_pred<0) z_pred = 0;
+        }
+        else {
+            if (z_pred>0) z_pred = 0;
+            else z_pred = TMath::Abs(z_pred);
+        }
         // double z_pred = TMath::Abs(charge_pred-z+0.01);
         // double z_pred = abs(charge_pred-z+0.01)/(data_charge_err->at(index).at(i)+0.01);
         if (x<nChannel_u) {

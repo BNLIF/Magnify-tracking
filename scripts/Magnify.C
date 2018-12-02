@@ -1,5 +1,5 @@
-void Magnify(const char* filename="../data/track_com_mc.root");
-void Magnify(const char* filename)
+void Magnify(const char* filename="../data/track_com_mc.root", int sign=0);
+void Magnify(const char* filename, int sign)
 {
     // Data *data = new Data(filename);
 
@@ -7,7 +7,8 @@ void Magnify(const char* filename)
         gClient->GetRoot(),
         1600,
         900,
-        filename
+        filename,
+        sign
     );
 
 
