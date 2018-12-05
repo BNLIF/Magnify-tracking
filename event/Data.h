@@ -41,6 +41,7 @@ public:
     vector<vector<double> >* rec_t;
     vector<vector<double> >* com_dis;
     vector<vector<double> >* com_dtheta;
+    vector<vector<double> >* true_dQ;
     int nCluster;
 
     vector<int> *data_cluster_id;

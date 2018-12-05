@@ -67,6 +67,7 @@ Data::Data(const char* filename, int sign)
     rec_t  = new vector<vector<double> >;
     com_dis  = new vector<vector<double> >;
     com_dtheta  = new vector<vector<double> >;
+    true_dQ  = new vector<vector<double> >;
 
     data_cluster_id = new vector<int>;
     data_channel = new vector<vector<int> >;
@@ -126,6 +127,7 @@ void Data::LoadRec()
     if (!isData) {
         T_rec->SetBranchAddress("com_dis", &com_dis);
         T_rec->SetBranchAddress("com_dtheta", &com_dtheta);
+        T_rec->SetBranchAddress("true_dQ", &true_dQ);
     }
 
     T_rec->GetEntry(0);
@@ -203,6 +205,23 @@ void Data::DrawDQDX()
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
     c1->cd(pad_dqdx);
     g->Draw("ALP");
+
+    if (!isData) {
+        TGraph *g_dqdx_true = (TGraph*)gROOT->FindObject("g_dqdx_true");
+        if (g_dqdx_true) {
+            delete g_dqdx_true;
+        }
+        g_dqdx_true = new TGraph(size);
+
+        for (int i=0; i<size; i++) {
+            g_dqdx_true->SetPoint(i, rec_L->at(currentCluster).at(i),
+                true_dQ->at(currentCluster).at(i)/1000/rec_dx->at(currentCluster).at(i));
+        }
+        g_dqdx_true->SetName("g_dqdx_true");
+        g_dqdx_true->SetLineColor(kRed);
+        g_dqdx_true->Draw("Lsame");
+    }
+
     pad->SetGridx();
     pad->SetGridy();
     pad->Modified();
