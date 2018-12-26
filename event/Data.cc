@@ -15,9 +15,11 @@
 #include "TGraph2D.h"
 #include "TCanvas.h"
 #include "TMarker.h"
+#include "TPolyMarker3D.h"
 #include "TGaxis.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
+
 
 #include <vector>
 #include <string>
@@ -76,7 +78,13 @@ Data::Data(const char* filename, int sign)
     data_charge_pred = new vector<vector<int> >;;
     data_charge_err = new vector<vector<int> >;;
 
+    true_x = new vector<vector<double> > ;
+    true_y = new vector<vector<double> > ;
+    true_z = new vector<vector<double> > ;
 
+    stat_beg_dis = new vector<double>;
+    stat_end_dis = new vector<double>;
+    
     for (int i=0; i<3; i++) {
         currentPoint[i] = new TMarker(0, 0, 24);
         currentPoint[i]->SetMarkerColor(6);
@@ -108,7 +116,16 @@ void Data::LoadData(const char* filename)
     LoadRec();
     LoadProj();
     LoadBadCh();
+    if (!isData)
+      LoadTruth();
 
+}
+
+void Data::LoadTruth(){
+  T_true->SetBranchAddress("x",&true_x);
+  T_true->SetBranchAddress("y",&true_y);
+  T_true->SetBranchAddress("z",&true_z);
+  T_true->GetEntry(0);
 }
 
 void Data::LoadRec()
@@ -128,6 +145,9 @@ void Data::LoadRec()
         T_rec->SetBranchAddress("com_dis", &com_dis);
         T_rec->SetBranchAddress("com_dtheta", &com_dtheta);
         T_rec->SetBranchAddress("true_dQ", &true_dQ);
+
+	T_rec->SetBranchAddress("stat_beg_dis",&stat_beg_dis);
+	T_rec->SetBranchAddress("stat_end_dis",&stat_end_dis);
     }
 
     T_rec->GetEntry(0);
@@ -138,6 +158,11 @@ void Data::LoadRec()
     }
     cout << endl;
 
+    if (!isData){
+      cout << "Starting point displacement: " << stat_beg_dis->at(0) << " cm" << std::endl;
+      cout << "Ending point displacement  : " << stat_end_dis->at(0) << " cm" << std::endl;
+    }
+    
 }
 
 void Data::LoadProj()
@@ -571,6 +596,9 @@ void Data::Draw3D()
 {
     TGraph2D *g = (TGraph2D*)gROOT->FindObject("g_3d");
     if (g) {delete g;}
+    
+    TGraph2D *gt = (TGraph2D*)gROOT->FindObject("gt_3d");
+    if (gt) {delete gt;}
 
     int nPoints = rec_x->at(currentCluster).size();
     g = new TGraph2D(nPoints);
@@ -586,8 +614,40 @@ void Data::Draw3D()
     g->GetXaxis()->SetTitle("z [cm]");
     g->GetYaxis()->SetTitle("x [cm]");
     g->GetZaxis()->SetTitle("y [cm]");
+
+    
+    
+    if (!isData){
+      nPoints = true_x->at(0).size();
+      gt = new TGraph2D(nPoints);
+      gt->SetName("gt_3d");
+      gt->SetTitle("");
+      for (int i=0; i<nPoints; i++) {
+        gt->SetPoint(i,
+            true_z->at(0).at(i),
+            true_x->at(0).at(i),
+            true_y->at(0).at(i)
+        );
+      }
+      gt->SetLineColor(2);
+      gt->GetXaxis()->SetTitle("z [cm]");
+      gt->GetYaxis()->SetTitle("x [cm]");
+      gt->GetZaxis()->SetTitle("y [cm]");
+    }
+    
+
     c1->cd(pad_3d);
     g->Draw("pLINE");
+if(!isData){
+gt->Draw("LINEsame");
+
+    TPolyMarker3D *gm = new TPolyMarker3D();
+    gm->SetPoint(0,rec_z->at(currentCluster).front(),rec_x->at(currentCluster).front(),rec_y->at(currentCluster).front());
+    gm->SetMarkerColor(4);
+    gm->SetMarkerStyle(29);
+    gm->SetMarkerSize(2);
+    gm->Draw("*same");
+}
     c1->GetPad(pad_3d)->Modified();
     c1->GetPad(pad_3d)->Update();
 }

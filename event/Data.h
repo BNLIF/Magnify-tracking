@@ -56,6 +56,13 @@ public:
     vector<int> bad_start;
     vector<int> bad_end;
 
+    vector<vector<double> >* true_x;
+    vector<vector<double> >* true_y;
+    vector<vector<double> >* true_z;
+
+    vector<double>* stat_beg_dis;
+    vector<double>* stat_end_dis;
+    
 
 
     // TH2F *h_proj[3];
@@ -83,6 +90,7 @@ public:
     void LoadRec();
     void LoadProj();
     void LoadBadCh();
+    void LoadTruth();
 
     void DrawDQDX();
     void DrawProj();
