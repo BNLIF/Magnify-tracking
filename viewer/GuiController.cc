@@ -126,8 +126,8 @@ void GuiController::UnZoom()
 
 void GuiController::ZoomChanged()
 {
-    int zoomBin = 10*cw->zoomEntry->GetNumber();
-    data->ZoomProj(currentPointIndex, zoomBin);
+  int zoomBin = 10*cw->zoomEntry->GetNumber();
+  data->ZoomProj(currentPointIndex, zoomBin);
 }
 
 void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *selected)
@@ -145,7 +145,15 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
         if (selected->IsA() == TGraph::Class() && padNo <=3) { // first row tgraph clicked
             TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
             currentPointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
+	    if (currentPointIndex!=g->GetN()-1){
+	      if (fabs(xx-*(g->GetX()+currentPointIndex)) >
+		  fabs(xx-*(g->GetX()+currentPointIndex+1)))
+		currentPointIndex += 1;
+	    }
             int zoomBin = 10*cw->zoomEntry->GetNumber();
+
+	    // std::cout << zoomBin << " " << cw->zoomEntry->GetNumber() << std::endl;
+	    
             data->ZoomProj(currentPointIndex, zoomBin);
             data->DrawPoint(currentPointIndex);
         }
