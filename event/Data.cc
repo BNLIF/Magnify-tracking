@@ -228,6 +228,7 @@ void Data::DrawDQDX()
     g->SetTitle(TString::Format("cluster id %i (index %i)", rec_cluster_id->at(currentCluster), currentCluster));
     g->GetXaxis()->SetTitle("Distance from start  [cm]");
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
+    g->GetYaxis()->SetRangeUser(0,150);
     c1->cd(pad_dqdx);
     g->Draw("ALP");
 
@@ -273,6 +274,7 @@ void Data::DrawMCCompare()
     g_com_dtheta->SetTitle("Difference to MC");
     g_com_dtheta->GetXaxis()->SetTitle("Distance from start [cm]");
     g_com_dtheta->GetYaxis()->SetTitle("");
+    g_com_dtheta->GetYaxis()->SetRangeUser(0,0.6);
     g_com_dtheta->Draw("ALP");
 
     TGraph *g = (TGraph*)gROOT->FindObject("g_com_dis");
