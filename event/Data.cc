@@ -228,7 +228,7 @@ void Data::DrawDQDX()
     g->SetTitle(TString::Format("cluster id %i (index %i)", rec_cluster_id->at(currentCluster), currentCluster));
     g->GetXaxis()->SetTitle("Distance from start  [cm]");
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
-    g->GetYaxis()->SetRangeUser(0,150);
+    g->GetYaxis()->SetRangeUser(0,250);
     c1->cd(pad_dqdx);
     g->Draw("ALP");
 
