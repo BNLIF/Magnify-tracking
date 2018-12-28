@@ -17,7 +17,7 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     group_general->SetTitlePos(TGGroupFrame::kLeft);
     AddFrame(group_general, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 1, 1));
 
-    group_general->AddFrame(new TGLabel(group_general, "cluster: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
+    group_general->AddFrame(new TGLabel(group_general, "cluster index: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
     clusterEntry = new TGNumberEntry(group_general, 0, 5, -1,
         TGNumberFormat::kNESInteger,
         TGNumberFormat::kNEANonNegative,
@@ -25,9 +25,20 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
         0, 20);
     group_general->AddFrame(clusterEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
+    group_general->AddFrame(new TGLabel(group_general, "cluster id: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
+    clusterIdEntry = new TGNumberEntry(group_general, 0, 5, -1,
+        TGNumberFormat::kNESInteger,
+        TGNumberFormat::kNEANonNegative,
+        TGNumberFormat::kNELLimitMinMax,
+        0, 1000);
+    group_general->AddFrame(clusterIdEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
+
     badChanelButton = new TGCheckButton(group_general, "bad channel  ");
     badChanelButton->SetState(kButtonUp);
     group_general->AddFrame(badChanelButton, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
+
+
+
 
     // setThreshButton = new TGTextButton(group_general, "ch. thresh. x");
     // group_general->AddFrame(setThreshButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 2, 2, 2));

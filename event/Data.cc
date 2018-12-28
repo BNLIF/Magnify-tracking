@@ -84,7 +84,7 @@ Data::Data(const char* filename, int sign)
 
     stat_beg_dis = new vector<double>;
     stat_end_dis = new vector<double>;
-    
+
     for (int i=0; i<3; i++) {
         currentPoint[i] = new TMarker(0, 0, 24);
         currentPoint[i]->SetMarkerColor(6);
@@ -155,6 +155,8 @@ void Data::LoadRec()
     cout << " rec cluster id: ";
     for (int i=0; i<nCluster; i++) {
         cout << rec_cluster_id->at(i) << " ";
+        int id = rec_cluster_id->at(i);
+        rec_cluster_map[id] = i;
     }
     cout << endl;
 
@@ -162,7 +164,7 @@ void Data::LoadRec()
       cout << "Starting point displacement: " << stat_beg_dis->at(0) << " cm" << std::endl;
       cout << "Ending point displacement  : " << stat_end_dis->at(0) << " cm" << std::endl;
     }
-    
+
 }
 
 void Data::LoadProj()
@@ -598,7 +600,7 @@ void Data::Draw3D()
 {
     TGraph2D *g = (TGraph2D*)gROOT->FindObject("g_3d");
     if (g) {delete g;}
-    
+
     TGraph2D *gt = (TGraph2D*)gROOT->FindObject("gt_3d");
     if (gt) {delete gt;}
 
@@ -617,8 +619,8 @@ void Data::Draw3D()
     g->GetYaxis()->SetTitle("x [cm]");
     g->GetZaxis()->SetTitle("y [cm]");
 
-    
-    
+
+
     if (!isData){
       nPoints = true_x->at(0).size();
       gt = new TGraph2D(nPoints);
@@ -636,7 +638,7 @@ void Data::Draw3D()
       gt->GetYaxis()->SetTitle("x [cm]");
       gt->GetZaxis()->SetTitle("y [cm]");
     }
-    
+
 
     c1->cd(pad_3d);
     g->Draw("pLINE");

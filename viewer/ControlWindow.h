@@ -15,6 +15,8 @@ public:
 
     TGNumberEntry *clusterEntry;
     TGNumberEntry *zoomEntry;
+    TGNumberEntry *clusterIdEntry;
+
 
     // TGNumberEntry *threshEntry[3];
     // TGNumberEntry *zAxisRangeEntry[2];

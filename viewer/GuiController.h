@@ -21,6 +21,7 @@ public:
     void HandleMenu(int id);
     void ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *selected);
     void ClusterChanged(int i);
+    void ClusterIdChanged(int i);
     // void ZRangeChanged();
     // void ChannelChanged();
     void ZoomChanged();

@@ -84,6 +84,10 @@ void GuiController::InitConnections()
     cw->clusterEntry->SetLimitValues(0, data->nCluster-1);
     cw->clusterEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ClusterChanged(int)");
 
+    cw->clusterIdEntry->SetNumber(data->rec_cluster_id->at(currentCluster));
+    cw->clusterIdEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ClusterIdChanged(int)");
+
+
     cw->zoomEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
     cw->badChanelButton->Connect("Clicked()", "GuiController", this, "ToggleBadChannel()");
     cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
@@ -112,6 +116,22 @@ void GuiController::SetCurrentCluster(int newCluster)
 void GuiController::ClusterChanged(int i)
 {
     int newCluster = cw->clusterEntry->GetNumber();
+    if (newCluster == currentCluster) return;
+    SetCurrentCluster(newCluster);
+
+    cw->clusterIdEntry->SetNumber(data->rec_cluster_id->at(newCluster));
+
+    data->DrawNewCluster();
+}
+
+void GuiController::ClusterIdChanged(int i)
+{
+    int newId = cw->clusterIdEntry->GetNumber();
+    int newCluster = data->rec_cluster_map[newId];
+    // cout << newCluster << endl;
+
+    cw->clusterEntry->SetNumber(newCluster);
+
     if (newCluster == currentCluster) return;
     SetCurrentCluster(newCluster);
 
@@ -153,7 +173,7 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
             int zoomBin = 10*cw->zoomEntry->GetNumber();
 
 	    // std::cout << zoomBin << " " << cw->zoomEntry->GetNumber() << std::endl;
-	    
+
             data->ZoomProj(currentPointIndex, zoomBin);
             data->DrawPoint(currentPointIndex);
         }

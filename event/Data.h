@@ -43,6 +43,8 @@ public:
     vector<vector<double> >* com_dtheta;
     vector<vector<double> >* true_dQ;
     int nCluster;
+    std::map<int, int> rec_cluster_map; // cluster id => index
+
 
     vector<int> *data_cluster_id;
     vector<vector<int> >* data_channel;
@@ -62,7 +64,7 @@ public:
 
     vector<double>* stat_beg_dis;
     vector<double>* stat_end_dis;
-    
+
 
 
     // TH2F *h_proj[3];
