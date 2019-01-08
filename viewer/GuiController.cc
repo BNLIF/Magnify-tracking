@@ -87,10 +87,6 @@ void GuiController::InitConnections()
     cw->clusterIdEntry->SetNumber(data->rec_cluster_id->at(currentCluster));
     cw->clusterIdEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ClusterIdChanged(int)");
 
-
-    TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
-    cw->pointIndexEntry->SetLimitValues(0, g->GetN()-1);
-    cw->pointIndexEntry->SetNumber(currentPointIndex);
     cw->pointIndexEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
 
     cw->zoomEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
@@ -116,6 +112,10 @@ void GuiController::SetCurrentCluster(int newCluster)
     cout << "new cluster: " << newCluster << endl;
     currentCluster = newCluster;
     data->currentCluster = currentCluster;
+
+    int size = data->rec_dQ->at(currentCluster).size();
+    cw->pointIndexEntry->SetLimitValues(0, size-1);
+    cw->pointIndexEntry->SetNumber(0);
 }
 
 void GuiController::ClusterChanged(int i)
@@ -127,6 +127,7 @@ void GuiController::ClusterChanged(int i)
     cw->clusterIdEntry->SetNumber(data->rec_cluster_id->at(newCluster));
 
     data->DrawNewCluster();
+
 }
 
 void GuiController::ClusterIdChanged(int i)
