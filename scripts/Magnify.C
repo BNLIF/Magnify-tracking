@@ -7,7 +7,7 @@ void Magnify(const char* filename, int sign)
         gClient->GetRoot(),
         1600,
         900,
-        filename,
+	 filename,
         sign
     );
 
