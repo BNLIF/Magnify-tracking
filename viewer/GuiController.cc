@@ -88,6 +88,11 @@ void GuiController::InitConnections()
     cw->clusterIdEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ClusterIdChanged(int)");
 
 
+    TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
+    cw->pointIndexEntry->SetLimitValues(0, g->GetN()-1);
+    cw->pointIndexEntry->SetNumber(currentPointIndex);
+    cw->pointIndexEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
+
     cw->zoomEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
     cw->badChanelButton->Connect("Clicked()", "GuiController", this, "ToggleBadChannel()");
     cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
@@ -146,8 +151,10 @@ void GuiController::UnZoom()
 
 void GuiController::ZoomChanged()
 {
-  int zoomBin = 10*cw->zoomEntry->GetNumber();
-  data->ZoomProj(currentPointIndex, zoomBin);
+    currentPointIndex = cw->pointIndexEntry->GetNumber();
+    int zoomBin = 10*cw->zoomEntry->GetNumber();
+    data->ZoomProj(currentPointIndex, zoomBin);
+    data->DrawPoint(currentPointIndex);
 }
 
 void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *selected)
@@ -165,14 +172,15 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
         if (selected->IsA() == TGraph::Class() && padNo <=3) { // first row tgraph clicked
             TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
             currentPointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
-	    if (currentPointIndex!=g->GetN()-1){
-	      if (fabs(xx-*(g->GetX()+currentPointIndex)) >
-		  fabs(xx-*(g->GetX()+currentPointIndex+1)))
-		currentPointIndex += 1;
-	    }
+    	    if (currentPointIndex!=g->GetN()-1){
+    	      if (fabs(xx-*(g->GetX()+currentPointIndex)) >
+    		  fabs(xx-*(g->GetX()+currentPointIndex+1)))
+    		  currentPointIndex += 1;
+    	    }
             int zoomBin = 10*cw->zoomEntry->GetNumber();
 
 	    // std::cout << zoomBin << " " << cw->zoomEntry->GetNumber() << std::endl;
+            cw->pointIndexEntry->SetNumber(currentPointIndex);
 
             data->ZoomProj(currentPointIndex, zoomBin);
             data->DrawPoint(currentPointIndex);

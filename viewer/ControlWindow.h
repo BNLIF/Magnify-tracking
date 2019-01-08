@@ -16,6 +16,7 @@ public:
     TGNumberEntry *clusterEntry;
     TGNumberEntry *zoomEntry;
     TGNumberEntry *clusterIdEntry;
+    TGNumberEntry *pointIndexEntry;
 
 
     // TGNumberEntry *threshEntry[3];

@@ -56,27 +56,18 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     // timeModeButton->SetState(kButtonUp);
     // group_general->AddFrame(timeModeButton, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
-    // TGGroupFrame *group[3];
-    // for (int i=0; i<3; i++) {
-    //     group[i] = new TGGroupFrame(this, "", kHorizontalFrame);
-    //     group[i]->SetTitlePos(TGGroupFrame::kLeft);
-    //     AddFrame(group[i], new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 1, 1));
 
-    //     group[i]->AddFrame(new TGLabel(group[i], "threshold: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
-    //     threshEntry[i] = new TGNumberEntry(group[i], 3, 5, -1,
-    //         TGNumberFormat::kNESInteger,
-    //         TGNumberFormat::kNEANonNegative,
-    //         TGNumberFormat::kNELLimitMinMax,
-    //         3, 30);
-    //     group[i]->AddFrame(threshEntry[i], new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
-    // }
-    // group[0]->SetTitle("U Plane");
-    // group[1]->SetTitle("V Plane");
-    // group[2]->SetTitle("W Plane");
-
-    TGGroupFrame *group_misc = new TGGroupFrame(this, "Range", kHorizontalFrame);
+    TGGroupFrame *group_misc = new TGGroupFrame(this, "Zoom", kHorizontalFrame);
     group_misc->SetTitlePos(TGGroupFrame::kLeft);
     AddFrame(group_misc, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 1, 1));
+
+    group_misc->AddFrame(new TGLabel(group_misc, "point index: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
+    pointIndexEntry = new TGNumberEntry(group_misc, 2, 5, -1,
+        TGNumberFormat::kNESInteger,
+        TGNumberFormat::kNEANonNegative,
+        TGNumberFormat::kNELLimitMinMax,
+        1, 1000);
+    group_misc->AddFrame(pointIndexEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
     group_misc->AddFrame(new TGLabel(group_misc, "zoom +- 10x: "), new TGLayoutHints(kLHintsTop | kLHintsLeft,  2, 2, 1, 1));
     zoomEntry = new TGNumberEntry(group_misc, 2, 5, -1,
