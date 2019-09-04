@@ -90,6 +90,9 @@ Data::Data(const char* filename, int sign)
         currentPoint[i]->SetMarkerColor(6);
         currentPoint[i]->SetMarkerSize(4);
     }
+    dqdxPoint = new TMarker(0, 0, 24);
+    dqdxPoint->SetMarkerColor(6);
+    dqdxPoint->SetMarkerSize(4);
 
     LoadData(filename);
 }
@@ -544,6 +547,23 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
     }
     c1->GetPad(pad_3d)->Modified();
     c1->GetPad(pad_3d)->Update();
+
+    // zoom 1D
+    TGraph *g_dqdx = (TGraph*)gROOT->FindObject("g_dqdx");
+    if (zoomBin<0) {
+        g_dqdx->GetXaxis()->UnZoom();
+    }
+    else {
+        double xx, yy;
+        g_dqdx->GetPoint(pointIndex, xx, yy);
+        g_dqdx->GetXaxis()->SetRangeUser(xx-10, xx+10);
+        c1->cd(pad_dqdx);
+        dqdxPoint->SetX(xx);
+        dqdxPoint->SetY(yy);
+        dqdxPoint->Draw();
+    }
+    c1->GetPad(pad_dqdx)->Modified();
+    c1->GetPad(pad_dqdx)->Update();
 
 }
 

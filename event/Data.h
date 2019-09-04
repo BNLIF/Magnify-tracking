@@ -87,6 +87,7 @@ public:
     int currentCluster;
     bool doDrawBadCh;
     TMarker *currentPoint[3];
+    TMarker *dqdxPoint;
     vector<TLine*> bad_lines;
 
     void LoadRec();
