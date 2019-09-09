@@ -234,6 +234,7 @@ void Data::DrawDQDX()
     g->GetXaxis()->SetTitle("Distance from start  [cm]");
     g->GetYaxis()->SetTitle("dQ/dx [1000 e^{-}/cm]");
     g->GetYaxis()->SetRangeUser(0,250);
+    g->SetEditable(false);
     c1->cd(pad_dqdx);
     g->Draw("ALP");
 
