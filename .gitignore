@@ -37,3 +37,4 @@ subl/
 test/
 old/
 *.pcm
+.vscode/

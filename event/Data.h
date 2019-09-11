@@ -39,6 +39,7 @@ public:
     vector<vector<double> >* rec_v;
     vector<vector<double> >* rec_w;
     vector<vector<double> >* rec_t;
+    vector<vector<double> >* reduced_chi2;
     vector<vector<double> >* com_dis;
     vector<vector<double> >* com_dtheta;
     vector<vector<double> >* true_dQ;

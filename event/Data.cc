@@ -67,6 +67,7 @@ Data::Data(const char* filename, int sign)
     rec_v  = new vector<vector<double> >;
     rec_w  = new vector<vector<double> >;
     rec_t  = new vector<vector<double> >;
+    reduced_chi2 = new vector<vector<double> >;
     com_dis  = new vector<vector<double> >;
     com_dtheta  = new vector<vector<double> >;
     true_dQ  = new vector<vector<double> >;
@@ -144,6 +145,9 @@ void Data::LoadRec()
     T_rec->SetBranchAddress("rec_v", &rec_v);
     T_rec->SetBranchAddress("rec_w", &rec_w);
     T_rec->SetBranchAddress("rec_t", &rec_t);
+    if (T_rec->GetBranch("reduced_chi2")) {
+        T_rec->SetBranchAddress("reduced_chi2", &reduced_chi2);
+    }
     if (!isData) {
         T_rec->SetBranchAddress("com_dis", &com_dis);
         T_rec->SetBranchAddress("com_dtheta", &com_dtheta);
@@ -253,6 +257,37 @@ void Data::DrawDQDX()
         g_dqdx_true->SetLineColor(kRed);
         g_dqdx_true->Draw("Lsame");
     }
+
+    TGraph *g_reduced_chi2 = (TGraph*)gROOT->FindObject("g_reduced_chi2");
+    if (reduced_chi2->size()>0) {
+        if (g_reduced_chi2) {
+            delete g_reduced_chi2;
+        }
+        size = reduced_chi2->at(currentCluster).size();
+        g_reduced_chi2 = new TGraph(size);
+
+        for (int i=0; i<size; i++) {
+            g_reduced_chi2->SetPoint(i, rec_L->at(currentCluster).at(i), reduced_chi2->at(currentCluster).at(i)*10);
+        }
+        g_reduced_chi2->SetName("g_reduced_chi2");
+        g_reduced_chi2->SetTitle(TString::Format("cluster %i", rec_cluster_id->at(currentCluster)));
+        g_reduced_chi2->SetLineColor(kBlue);
+        g_reduced_chi2->SetMarkerColor(kBlue);
+        g_reduced_chi2->SetMarkerStyle(7);
+        // g_reduced_chi2->GetYaxis()->SetTitle("Distance (Data - MC) [cm]");
+        g_reduced_chi2->Draw("LPsame");
+        // // TGaxis *axis = new TGaxis(pad->GetUxmax(), pad->GetUymin(), pad->GetUxmax(), pad->GetUymax(),
+        // //     pad->GetUymin(), pad->GetUymax(), 510,"+L");
+        // // axis->SetLineColor(kRed);
+        // // axis->Draw();
+        TLegend *leg = new TLegend(0.67, 0.67, 0.87, 0.87);
+        TLegendEntry *l1 = leg->AddEntry(g, "dQ/dx", "l");
+        l1->SetTextColor(kBlack);
+        TLegendEntry *l2 = leg->AddEntry(g_reduced_chi2, "#chi^{2} x10", "l");
+        l2->SetTextColor(kBlue);
+        leg->Draw();
+    }
+
 
     pad->SetGridx();
     pad->SetGridy();
