@@ -230,6 +230,7 @@ void Data::DrawDQDX()
     g = new TGraph(size);
 
     for (int i=0; i<size; i++) {
+      // std::cout << i << " " << rec_L->at(currentCluster).at(i) << std::endl;
         g->SetPoint(i, rec_L->at(currentCluster).at(i),
             rec_dQ->at(currentCluster).at(i)/1000/rec_dx->at(currentCluster).at(i));
     }
