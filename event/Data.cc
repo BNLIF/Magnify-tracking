@@ -284,7 +284,7 @@ void Data::DrawDQDX()
         TLegend *leg = new TLegend(0.67, 0.67, 0.87, 0.87);
         TLegendEntry *l1 = leg->AddEntry(g, "dQ/dx", "l");
         l1->SetTextColor(kBlack);
-        TLegendEntry *l2 = leg->AddEntry(g_reduced_chi2, "#chi^{2} x10", "l");
+        TLegendEntry *l2 = leg->AddEntry(g_reduced_chi2, "#chi_{red.}^{2} x10", "l");
         l2->SetTextColor(kBlue);
         leg->Draw();
     }
