@@ -37,6 +37,9 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
     badChanelButton->SetState(kButtonUp);
     group_general->AddFrame(badChanelButton, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
+    drawTrackButton = new TGCheckButton(group_general, "draw track  ");
+    drawTrackButton->SetState(kButtonDown);
+    group_general->AddFrame(drawTrackButton, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
 
 

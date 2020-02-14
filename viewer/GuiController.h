@@ -26,6 +26,7 @@ public:
     // void ChannelChanged();
     void ZoomChanged();
     void ToggleBadChannel();
+    void ToggleDrawTrack();
     void UnZoom();
 
     void SetCurrentCluster(int newCluster); // index in the bin, not id

@@ -87,6 +87,7 @@ public:
     int pad_pred;
     int currentCluster;
     bool doDrawBadCh;
+    bool doDrawTrack;
     TMarker *currentPoint[3];
     TMarker *dqdxPoint;
     vector<TLine*> bad_lines;

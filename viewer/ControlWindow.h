@@ -24,6 +24,7 @@ public:
     // TGNumberEntry *timeRangeEntry[2];
     // TGNumberEntry *adcRangeEntry[2];
     TGCheckButton *badChanelButton;
+    TGCheckButton *drawTrackButton;
     TGTextButton  *unZoomButton;
 
     // TGTextButton  *setThreshButton;

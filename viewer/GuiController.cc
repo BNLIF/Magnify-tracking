@@ -91,6 +91,7 @@ void GuiController::InitConnections()
 
     cw->zoomEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
     cw->badChanelButton->Connect("Clicked()", "GuiController", this, "ToggleBadChannel()");
+    cw->drawTrackButton->Connect("Clicked()", "GuiController", this, "ToggleDrawTrack()");
     cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
 
     vw->can->Connect(
@@ -105,6 +106,13 @@ void GuiController::ToggleBadChannel()
 {
     data->doDrawBadCh = cw->badChanelButton->IsDown();
     data->DrawBadCh();
+}
+
+void GuiController::ToggleDrawTrack()
+{
+    data->doDrawTrack = cw->drawTrackButton->IsDown();
+    data->DrawProj();
+    ZoomChanged();
 }
 
 void GuiController::SetCurrentCluster(int newCluster)

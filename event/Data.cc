@@ -43,6 +43,7 @@ Data::Data(const char* filename, int sign)
     pad_pred = 7;
     currentCluster = 0;
     doDrawBadCh = false;
+    doDrawTrack = true;
 
     rootFile = 0;
     T_true = 0;
@@ -458,7 +459,9 @@ void Data::DrawProj()
         h[i]->Draw("colz");
         g[i]->SetLineWidth(2);
         g[i]->SetLineColor(6);
-        g[i]->Draw("LPsame");
+        if (doDrawTrack) {
+            g[i]->Draw("LPsame");
+        }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
 
@@ -472,7 +475,9 @@ void Data::DrawProj()
         pad = pad_pred+i;
         c1->cd(pad);
         hpred[i]->Draw("colz");
-        g[i]->Draw("LPsame");
+        if (doDrawTrack) {
+            g[i]->Draw("LPsame");
+        }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
     }
