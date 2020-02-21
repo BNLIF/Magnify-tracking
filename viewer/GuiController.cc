@@ -93,6 +93,7 @@ void GuiController::InitConnections()
     cw->badChanelButton->Connect("Clicked()", "GuiController", this, "ToggleBadChannel()");
     cw->drawTrackButton->Connect("Clicked()", "GuiController", this, "ToggleDrawTrack()");
     cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
+    cw->rangeZoomButton->Connect("Clicked()", "GuiController", this, "RangeZoom()");
 
     vw->can->Connect(
         "ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
@@ -135,6 +136,9 @@ void GuiController::ClusterChanged(int i)
     cw->clusterIdEntry->SetNumber(data->rec_cluster_id->at(newCluster));
 
     data->DrawNewCluster();
+    if (cw->keepRangeButton->IsDown()) {
+        RangeZoom();
+    }
 
 }
 
@@ -150,12 +154,25 @@ void GuiController::ClusterIdChanged(int i)
     SetCurrentCluster(newCluster);
 
     data->DrawNewCluster();
+    if (cw->keepRangeButton->IsDown()) {
+        RangeZoom();
+    }
 }
 
 
 void GuiController::UnZoom()
 {
     data->ZoomProj(0, -1);
+}
+
+void GuiController::RangeZoom()
+{
+    data->ZoomProj(0, -1,
+        cw->minEntry[0]->GetNumber(), cw->maxEntry[0]->GetNumber(),
+        cw->minEntry[1]->GetNumber(), cw->maxEntry[1]->GetNumber(),
+        cw->minEntry[2]->GetNumber(), cw->maxEntry[2]->GetNumber(),
+        cw->minEntry[3]->GetNumber(), cw->maxEntry[3]->GetNumber()
+    );
 }
 
 void GuiController::ZoomChanged()

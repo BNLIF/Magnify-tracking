@@ -99,7 +99,8 @@ public:
 
     void DrawDQDX();
     void DrawProj();
-    void ZoomProj(int pointIndex, int zoomBin);
+    void ZoomProj(int pointIndex, int zoomBin, 
+        int t0=-1, int t1=-1, int u0=-1, int u1=-1, int v0=-1, int v1=-1, int w0=-1, int w1=-1);
     void DrawPoint(int pointIndex);
     void DrawBadCh();
     void Draw3D();

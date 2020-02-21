@@ -485,7 +485,7 @@ void Data::DrawProj()
     DrawBadCh();
 }
 
-void Data::ZoomProj(int pointIndex, int zoomBin)
+void Data::ZoomProj(int pointIndex, int zoomBin, int t0, int t1, int u0, int u1, int v0, int v1, int w0, int w1)
 {
     int u =  rec_u->at(currentCluster).at(pointIndex);
     int v =  rec_v->at(currentCluster).at(pointIndex);
@@ -501,8 +501,14 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
 
     TH2F *h = (TH2F*)gROOT->FindObject("h_proj_u");
     if (zoomBin<0) {
-        h->GetXaxis()->UnZoom();
-        h->GetYaxis()->UnZoom();
+        if (t0<0) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        }
+        else {
+            h->GetXaxis()->SetRangeUser(u0, u1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
     }
     else {
         h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
@@ -513,8 +519,14 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
 
     h = (TH2F*)gROOT->FindObject("h_proj_v");
     if (zoomBin<0) {
-        h->GetXaxis()->UnZoom();
-        h->GetYaxis()->UnZoom();
+        if (t0<0) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        }
+        else {
+            h->GetXaxis()->SetRangeUser(v0, v1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
     }
     else {
         h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
@@ -525,8 +537,14 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
 
     h = (TH2F*)gROOT->FindObject("h_proj_w");
     if (zoomBin<0) {
-        h->GetXaxis()->UnZoom();
-        h->GetYaxis()->UnZoom();
+        if (t0<0) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        }
+        else {
+            h->GetXaxis()->SetRangeUser(w0, w1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
     }
     else {
         h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
@@ -538,8 +556,14 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
     // zoom prediction
     h = (TH2F*)gROOT->FindObject("h_pred_u");
     if (zoomBin<0) {
-        h->GetXaxis()->UnZoom();
-        h->GetYaxis()->UnZoom();
+        if (t0<0) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        }
+        else {
+            h->GetXaxis()->SetRangeUser(u0, u1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
     }
     else {
         h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
@@ -550,8 +574,14 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
 
     h = (TH2F*)gROOT->FindObject("h_pred_v");
     if (zoomBin<0) {
-        h->GetXaxis()->UnZoom();
-        h->GetYaxis()->UnZoom();
+        if (t0<0) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        }
+        else {
+            h->GetXaxis()->SetRangeUser(v0, v1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
     }
     else {
         h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
@@ -562,8 +592,14 @@ void Data::ZoomProj(int pointIndex, int zoomBin)
 
     h = (TH2F*)gROOT->FindObject("h_pred_w");
     if (zoomBin<0) {
-        h->GetXaxis()->UnZoom();
-        h->GetYaxis()->UnZoom();
+        if (t0<0) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        }
+        else {
+            h->GetXaxis()->SetRangeUser(w0, w1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
     }
     else {
         h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);

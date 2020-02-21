@@ -27,8 +27,12 @@ public:
     TGCheckButton *drawTrackButton;
     TGTextButton  *unZoomButton;
 
-    // TGTextButton  *setThreshButton;
-    // TGNumberEntry *threshScaleEntry;
+    TGNumberEntry *minEntry[4];
+    TGNumberEntry *maxEntry[4];
+    TGCheckButton *keepRangeButton;
+    TGTextButton  *rangeZoomButton;
+
+
 
     ClassDef(ControlWindow, 0)
 };
