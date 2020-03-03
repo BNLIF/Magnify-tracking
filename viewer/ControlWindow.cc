@@ -34,7 +34,11 @@ ControlWindow::ControlWindow(const TGWindow *p, int w, int h)
         0, 1000);
     group_general->AddFrame(clusterIdEntry, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 
-    badChanelButton = new TGCheckButton(group_general, "bad channel  ");
+    allClusterButton = new TGCheckButton(group_general, "all clusters  ");
+    allClusterButton->SetState(kButtonUp);
+    group_general->AddFrame(allClusterButton, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
+
+    badChanelButton = new TGCheckButton(group_general, "bad ch  ");
     badChanelButton->SetState(kButtonUp);
     group_general->AddFrame(badChanelButton, new TGLayoutHints(kLHintsTop | kLHintsLeft,  1, 1, 1, 1));
 

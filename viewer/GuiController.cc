@@ -92,6 +92,8 @@ void GuiController::InitConnections()
     cw->zoomEntry->Connect("ValueSet(Long_t)", "GuiController", this, "ZoomChanged()");
     cw->badChanelButton->Connect("Clicked()", "GuiController", this, "ToggleBadChannel()");
     cw->drawTrackButton->Connect("Clicked()", "GuiController", this, "ToggleDrawTrack()");
+    cw->allClusterButton->Connect("Clicked()", "GuiController", this, "ToggleAllCluster()");
+
     cw->unZoomButton->Connect("Clicked()", "GuiController", this, "UnZoom()");
     cw->rangeZoomButton->Connect("Clicked()", "GuiController", this, "RangeZoom()");
 
@@ -115,6 +117,26 @@ void GuiController::ToggleDrawTrack()
     data->DrawProj();
     ZoomChanged();
 }
+
+void GuiController::ToggleAllCluster()
+{
+    if (cw->allClusterButton->IsDown()) {
+        data->DrawProjAll(
+            cw->minEntry[0]->GetNumber(), cw->maxEntry[0]->GetNumber(),
+            cw->minEntry[1]->GetNumber(), cw->maxEntry[1]->GetNumber(),
+            cw->minEntry[2]->GetNumber(), cw->maxEntry[2]->GetNumber(),
+            cw->minEntry[3]->GetNumber(), cw->maxEntry[3]->GetNumber()
+        );
+        // ZoomChanged();
+    }
+    else {
+        data->DrawProj();
+        ZoomChanged();
+
+    }
+;
+}
+
 
 void GuiController::SetCurrentCluster(int newCluster)
 {
@@ -163,6 +185,7 @@ void GuiController::ClusterIdChanged(int i)
 void GuiController::UnZoom()
 {
     data->ZoomProj(0, -1);
+    SetRangeEntries();
 }
 
 void GuiController::RangeZoom()
@@ -181,6 +204,7 @@ void GuiController::ZoomChanged()
     int zoomBin = 10*cw->zoomEntry->GetNumber();
     data->ZoomProj(currentPointIndex, zoomBin);
     data->DrawPoint(currentPointIndex);
+    SetRangeEntries();
 }
 
 void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *selected)
@@ -194,7 +218,8 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
         int padNo = pad->GetNumber();
         double xx = pad->AbsPixeltoX(x);
         double yy = pad->AbsPixeltoY(y);
-        cout << "pad " << padNo << ": (" << xx << ", " << yy << ")" << endl;
+        cout << "pad " << padNo << ": (" << xx << ", " << yy << ")" 
+            << "; cluster index: " << data->FindClusterIndex(xx, yy) << endl;
         if (selected->IsA() == TGraph::Class() && padNo <=3) { // first row tgraph clicked
             TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
             currentPointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
@@ -210,12 +235,24 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
 
             data->ZoomProj(currentPointIndex, zoomBin);
             data->DrawPoint(currentPointIndex);
+            SetRangeEntries();
         }
         else if (selected->IsA() == TH2F::Class()) { // 2nd row th2f clicked
 
         }
     }
+}
 
+void GuiController::SetRangeEntries()
+{    
+    cw->minEntry[0]->SetNumber(vw->can->GetPad(data->pad_proj)->GetUymin());
+    cw->maxEntry[0]->SetNumber(vw->can->GetPad(data->pad_proj)->GetUymax());
+    cw->minEntry[1]->SetNumber(vw->can->GetPad(data->pad_proj)->GetUxmin());
+    cw->maxEntry[1]->SetNumber(vw->can->GetPad(data->pad_proj)->GetUxmax());
+    cw->minEntry[2]->SetNumber(vw->can->GetPad(data->pad_proj+1)->GetUxmin());
+    cw->maxEntry[2]->SetNumber(vw->can->GetPad(data->pad_proj+1)->GetUxmax());
+    cw->minEntry[3]->SetNumber(vw->can->GetPad(data->pad_proj+2)->GetUxmin());
+    cw->maxEntry[3]->SetNumber(vw->can->GetPad(data->pad_proj+2)->GetUxmax());
 }
 
 void GuiController::HandleMenu(int id)

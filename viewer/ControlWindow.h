@@ -25,6 +25,7 @@ public:
     // TGNumberEntry *adcRangeEntry[2];
     TGCheckButton *badChanelButton;
     TGCheckButton *drawTrackButton;
+    TGCheckButton *allClusterButton;
     TGTextButton  *unZoomButton;
 
     TGNumberEntry *minEntry[4];

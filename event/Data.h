@@ -98,15 +98,18 @@ public:
     void LoadTruth();
 
     void DrawDQDX();
-    void DrawProj();
+    void DrawProj();    
+    void DrawProjAll(int t0=-2, int t1=-1, int u0=-1, int u1=-1, int v0=-1, int v1=-1, int w0=-1, int w1=-1);
     void ZoomProj(int pointIndex, int zoomBin, 
-        int t0=-1, int t1=-1, int u0=-1, int u1=-1, int v0=-1, int v1=-1, int w0=-1, int w1=-1);
+        int t0=-2, int t1=-1, int u0=-1, int u1=-1, int v0=-1, int v1=-1, int w0=-1, int w1=-1);
     void DrawPoint(int pointIndex);
     void DrawBadCh();
     void Draw3D();
     void DrawMCCompare();
 
     void DrawNewCluster();
+
+    int FindClusterIndex(double x, double y);
 
 
 private:
