@@ -19,6 +19,7 @@
 #include "TGaxis.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
+#include "TLine.h"
 
 
 #include <vector>
@@ -72,6 +73,8 @@ Data::Data(const char* filename, int sign)
     com_dis  = new vector<vector<double> >;
     com_dtheta  = new vector<vector<double> >;
     true_dQ  = new vector<vector<double> >;
+    flag_vertex  = new vector<vector<int> >;
+    sub_cluster_id  = new vector<vector<int> >;
 
     data_cluster_id = new vector<int>;
     data_channel = new vector<vector<int> >;
@@ -154,9 +157,11 @@ void Data::LoadRec()
         T_rec->SetBranchAddress("com_dtheta", &com_dtheta);
         T_rec->SetBranchAddress("true_dQ", &true_dQ);
 
-	T_rec->SetBranchAddress("stat_beg_dis",&stat_beg_dis);
-	T_rec->SetBranchAddress("stat_end_dis",&stat_end_dis);
+	    T_rec->SetBranchAddress("stat_beg_dis",&stat_beg_dis);
+	    T_rec->SetBranchAddress("stat_end_dis",&stat_end_dis);
     }
+    T_rec->SetBranchAddress("flag_vertex", &flag_vertex);
+    T_rec->SetBranchAddress("sub_cluster_id", &sub_cluster_id);
 
     T_rec->GetEntry(0);
     nCluster = rec_cluster_id->size();
@@ -228,8 +233,27 @@ void Data::DrawDQDX()
     TVirtualPad *pad = c1->GetPad(pad_dqdx);
 
     int size = rec_dQ->at(currentCluster).size();
-    g = new TGraph(size);
+    vector<int> sub_id;
+    vector<int> start_index;
+    vector<int> end_index; 
+    sub_id.push_back(-1);
+    start_index.push_back(0);
+    end_index.push_back(0);
+    int current_sub_index = 0;
+    for (int i=0; i<size; i++) {
+        int id = sub_cluster_id->at(currentCluster).at(i);
+        if (id == sub_id[current_sub_index]) {
+            end_index[current_sub_index] = i;
+        }
+        else {
+            sub_id.push_back(id);
+            start_index.push_back(i);
+            end_index.push_back(i);
+            current_sub_index++;
+        }
+    }
 
+    g = new TGraph(size);    
     for (int i=0; i<size; i++) {
       // std::cout << i << " " << rec_L->at(currentCluster).at(i) << std::endl;
         g->SetPoint(i, rec_L->at(currentCluster).at(i),
@@ -243,6 +267,16 @@ void Data::DrawDQDX()
     g->SetEditable(false);
     c1->cd(pad_dqdx);
     g->Draw("ALP");
+
+    for (size_t i=0; i<sub_id.size(); i++) {
+        cout << sub_id[i] << ", " << start_index[i] << ", " << end_index[i] << endl;
+        TLine *line = new TLine(
+            g->GetX()[end_index[i]]+0.5, 0, 
+            g->GetX()[end_index[i]]+0.5, 250);
+        line->SetLineColorAlpha(kRed, 0.5);
+        line->Draw();
+    }
+    
 
     if (!isData) {
         TGraph *g_dqdx_true = (TGraph*)gROOT->FindObject("g_dqdx_true");

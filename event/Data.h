@@ -43,6 +43,8 @@ public:
     vector<vector<double> >* com_dis;
     vector<vector<double> >* com_dtheta;
     vector<vector<double> >* true_dQ;
+    vector<vector<int> >* flag_vertex;
+    vector<vector<int> >* sub_cluster_id;
     int nCluster;
     std::map<int, int> rec_cluster_map; // cluster id => index
 
