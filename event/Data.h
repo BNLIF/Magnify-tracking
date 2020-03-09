@@ -11,6 +11,7 @@ class TBox;
 class TCanvas;
 class TMarker;
 class TLine;
+class TGraph;
 
 class Data {
 public:
@@ -47,7 +48,9 @@ public:
     vector<vector<int> >* sub_cluster_id;
     int nCluster;
     std::map<int, int> rec_cluster_map; // cluster id => index
-
+    vector<int> sub_id; // list of sub cluster IDs.
+    vector<int> sub_start_index;
+    vector<int> sub_end_index; 
 
     vector<int> *data_cluster_id;
     vector<vector<int> >* data_channel;
@@ -93,6 +96,9 @@ public:
     TMarker *currentPoint[3];
     TMarker *dqdxPoint;
     vector<TLine*> bad_lines;
+    vector<TGraph*> g_subclusters_u;
+    vector<TGraph*> g_subclusters_v;
+    vector<TGraph*> g_subclusters_w;
 
     void LoadRec();
     void LoadProj();
@@ -104,6 +110,7 @@ public:
     void DrawProjAll(int t0=-2, int t1=-1, int u0=-1, int u1=-1, int v0=-1, int v1=-1, int w0=-1, int w1=-1);
     void ZoomProj(int pointIndex, int zoomBin, 
         int t0=-2, int t1=-1, int u0=-1, int u1=-1, int v0=-1, int v1=-1, int w0=-1, int w1=-1);
+    void DrawSubclusters();
     void DrawPoint(int pointIndex);
     void DrawBadCh();
     void Draw3D();

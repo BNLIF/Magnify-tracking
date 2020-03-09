@@ -233,22 +233,19 @@ void Data::DrawDQDX()
     TVirtualPad *pad = c1->GetPad(pad_dqdx);
 
     int size = rec_dQ->at(currentCluster).size();
-    vector<int> sub_id;
-    vector<int> start_index;
-    vector<int> end_index; 
     sub_id.push_back(-1);
-    start_index.push_back(0);
-    end_index.push_back(0);
+    sub_start_index.push_back(0);
+    sub_end_index.push_back(0);
     int current_sub_index = 0;
     for (int i=0; i<size; i++) {
         int id = sub_cluster_id->at(currentCluster).at(i);
         if (id == sub_id[current_sub_index]) {
-            end_index[current_sub_index] = i;
+            sub_end_index[current_sub_index] = i;
         }
         else {
             sub_id.push_back(id);
-            start_index.push_back(i);
-            end_index.push_back(i);
+            sub_start_index.push_back(i);
+            sub_end_index.push_back(i);
             current_sub_index++;
         }
     }
@@ -269,10 +266,10 @@ void Data::DrawDQDX()
     g->Draw("ALP");
 
     for (size_t i=0; i<sub_id.size(); i++) {
-        cout << sub_id[i] << ", " << start_index[i] << ", " << end_index[i] << endl;
+        cout << sub_id[i] << ", " << sub_start_index[i] << ", " << sub_end_index[i] << endl;
         TLine *line = new TLine(
-            g->GetX()[end_index[i]]+0.5, 0, 
-            g->GetX()[end_index[i]]+0.5, 250);
+            g->GetX()[sub_end_index[i]]+0.5, 0, 
+            g->GetX()[sub_end_index[i]]+0.5, 250);
         line->SetLineColorAlpha(kRed, 0.5);
         line->Draw();
     }
@@ -494,7 +491,8 @@ void Data::DrawProj()
         g[i]->SetLineWidth(2);
         g[i]->SetLineColor(6);
         if (doDrawTrack) {
-            g[i]->Draw("LPsame");
+            // g[i]->Draw("LPsame");
+            // DrawSubclusters();
         }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
@@ -510,12 +508,16 @@ void Data::DrawProj()
         c1->cd(pad);
         hpred[i]->Draw("colz");
         if (doDrawTrack) {
-            g[i]->Draw("LPsame");
+            // g[i]->Draw("LPsame");
+            // DrawSubclusters();
         }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
     }
 
+    if (doDrawTrack) {
+        DrawSubclusters();
+    }
     DrawBadCh();
 }
 
@@ -676,6 +678,104 @@ void Data::ZoomProj(int pointIndex, int zoomBin, int t0, int t1, int u0, int u1,
     }
     c1->GetPad(pad_dqdx)->Modified();
     c1->GetPad(pad_dqdx)->Update();
+
+}
+
+void Data::DrawSubclusters()
+{
+    vector<TGraph*>*  pg[3] = {&g_subclusters_u, &g_subclusters_v, &g_subclusters_w};
+    for (int k=0; k<3; k++) {
+        if (pg[k]->size()>0) {
+            for (size_t i=0; i<pg[k]->size(); i++) {
+                delete pg[k]->at(i);
+            }
+        }
+        pg[k]->clear();
+    }
+
+
+    int nSub = sub_id.size();
+    cout << "#sub clusters: " << nSub << endl;
+    for (int i=0; i<nSub; i++) {
+        int nPoints = sub_end_index[i]-sub_start_index[i]+1;
+        for (int k=0; k<3; k++) {
+            pg[k]->push_back( new TGraph(nPoints) );
+        }
+    }
+    // cout << "g_subclusters_v: " << g_subclusters_v.size() << endl;
+
+
+    int allPoints = rec_u->at(currentCluster).size();
+    int i = 0;
+    int currentSub = 0;
+    int currentPointInSub = 0;
+    while (i < allPoints) {
+        double u = rec_u->at(currentCluster).at(i);
+        double v = rec_v->at(currentCluster).at(i);
+        double w = rec_w->at(currentCluster).at(i);
+        double t = rec_t->at(currentCluster).at(i);
+        int id = sub_cluster_id->at(currentCluster).at(i);
+
+        g_subclusters_u[currentSub]->SetPoint(currentPointInSub, u, t);
+        g_subclusters_v[currentSub]->SetPoint(currentPointInSub, v, t);
+        g_subclusters_w[currentSub]->SetPoint(currentPointInSub, w, t);
+
+        i++;
+        currentPointInSub++;
+        
+        if (i>sub_end_index[currentSub]) {
+            currentSub++;
+            currentPointInSub = 0;
+        }
+
+    }
+
+    const int NC = 7;
+    int colors[] = {1, 6, 2, 4, 8, 7, 28}; 
+    const int NM = 3;
+    int markers[] = {25, 26, 32}; 
+
+    for (int k=0; k<3; k++) {
+        int pad = pad_proj+k;
+        c1->cd(pad);
+        for (int i=1; i<nSub; i++) {
+            pg[k]->at(i)->SetLineWidth(2);
+            pg[k]->at(i)->SetMarkerSize(0.5);
+            pg[k]->at(i)->SetLineColor(colors[i%NC]);
+            pg[k]->at(i)->SetMarkerStyle(markers[i%NM]);
+            pg[k]->at(i)->Draw("LPsame");
+        }
+        c1->GetPad(pad)->Modified();
+        c1->GetPad(pad)->Update();
+
+        pad = pad_pred+k;
+        c1->cd(pad);
+        for (int i=1; i<nSub; i++) {
+            pg[k]->at(i)->Draw("LPsame");
+        }
+        c1->GetPad(pad)->Modified();
+        c1->GetPad(pad)->Update();
+    }
+
+
+
+    // for (int i=0; i<size2; i++) {
+    //     double u = rec_u->at(currentCluster).at(i);
+    //     double v = rec_v->at(currentCluster).at(i);
+    //     double w = rec_w->at(currentCluster).at(i);
+    //     double t = rec_t->at(currentCluster).at(i);
+    //     int id = sub_cluster_id->at(currentCluster).at(i);
+    //     // double q = rec_dQ->at(bin).at(i);
+    //     // g_rec_u->SetPoint(i, u, t);
+    //     // g_rec_v->SetPoint(i, v, t);
+    //     // g_rec_w->SetPoint(i, w, t);
+    //     for (int j=0; j<nSub; j++) {
+    //         if (i>=sub_start_index[j] && i<=sub_end_index[j]) {
+    //             g_subclusters_u[j]->SetPoint(i, u, t);
+
+    //         }
+    //     }
+    // }
 
 }
 
