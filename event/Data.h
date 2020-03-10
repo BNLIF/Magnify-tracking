@@ -12,6 +12,7 @@ class TCanvas;
 class TMarker;
 class TLine;
 class TGraph;
+class TGraph2D;
 
 class Data {
 public:
@@ -99,6 +100,7 @@ public:
     vector<TGraph*> g_subclusters_u;
     vector<TGraph*> g_subclusters_v;
     vector<TGraph*> g_subclusters_w;
+    vector<TGraph2D*> g_subclusters_3d;
 
     void LoadRec();
     void LoadProj();

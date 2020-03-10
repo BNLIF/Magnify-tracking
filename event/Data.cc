@@ -696,6 +696,12 @@ void Data::DrawSubclusters()
         }
         pg[k]->clear();
     }
+    if (g_subclusters_3d.size()>0) {
+        for (size_t i=0; i<g_subclusters_3d.size(); i++) {
+            delete g_subclusters_3d.at(i);
+        }
+    }
+    g_subclusters_3d.clear();
 
 
     int nSub = sub_id.size();
@@ -705,6 +711,9 @@ void Data::DrawSubclusters()
         for (int k=0; k<3; k++) {
             pg[k]->push_back( new TGraph(nPoints) );
         }
+        g_subclusters_3d.push_back( new TGraph2D(nPoints) );
+        g_subclusters_3d[i]->SetName( TString::Format("g_3d_%i", sub_id[i]%1000) );
+
     }
     // cout << "g_subclusters_v: " << g_subclusters_v.size() << endl;
 
@@ -723,6 +732,12 @@ void Data::DrawSubclusters()
         g_subclusters_u[currentSub]->SetPoint(currentPointInSub, u, t);
         g_subclusters_v[currentSub]->SetPoint(currentPointInSub, v, t);
         g_subclusters_w[currentSub]->SetPoint(currentPointInSub, w, t);
+
+        g_subclusters_3d[currentSub]->SetPoint(currentPointInSub,
+            rec_z->at(currentCluster).at(i),
+            rec_x->at(currentCluster).at(i),
+            rec_y->at(currentCluster).at(i)
+        );
 
         i++;
         currentPointInSub++;
@@ -759,14 +774,22 @@ void Data::DrawSubclusters()
         }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
-    }        
+    }      
+
+    c1->cd(pad_3d);
+    for (int i=1; i<nSub; i++) {
+        g_subclusters_3d[i]->SetLineWidth(2);
+        g_subclusters_3d[i]->SetMarkerSize(0.5);
+        g_subclusters_3d[i]->SetLineColor(colors[i%NC]);
+        g_subclusters_3d[i]->SetMarkerStyle(markers[i%NM]);
+        g_subclusters_3d[i]->Draw("pLINE,same");
+    }  
     
     TLegend *leg = new TLegend(0.15, 0.50, 0.87, 0.87);
     for (int i=1; i<nSub; i++) {
         leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "lp");
     }
-    int pad = pad_dqdx+1;
-    c1->cd(pad);    
+    c1->cd(pad_dqdx+1);    
     TH2F *hInfo = (TH2F*)gROOT->FindObject("hInfo");
     if (hInfo) { delete hInfo;}
     hInfo = new TH2F("hInfo","Info", 10, 0, 1, 10, 0, 1);
@@ -870,17 +893,20 @@ void Data::Draw3D()
 
 
     c1->cd(pad_3d);
-    g->Draw("pLINE");
-if(!isData){
-gt->Draw("LINEsame");
+    // g->Draw("pLINE");
+    g->SetMarkerSize(0);
+    g->Draw("p");
 
-    TPolyMarker3D *gm = new TPolyMarker3D();
-    gm->SetPoint(0,rec_z->at(currentCluster).front(),rec_x->at(currentCluster).front(),rec_y->at(currentCluster).front());
-    gm->SetMarkerColor(4);
-    gm->SetMarkerStyle(29);
-    gm->SetMarkerSize(2);
-    gm->Draw("*same");
-}
+    if(!isData){
+        gt->Draw("LINEsame");
+        TPolyMarker3D *gm = new TPolyMarker3D();
+        gm->SetPoint(0,rec_z->at(currentCluster).front(),rec_x->at(currentCluster).front(),rec_y->at(currentCluster).front());
+        gm->SetMarkerColor(4);
+        gm->SetMarkerStyle(29);
+        gm->SetMarkerSize(2);
+        gm->Draw("*same");
+    }
+
     c1->GetPad(pad_3d)->Modified();
     c1->GetPad(pad_3d)->Update();
 }
@@ -889,10 +915,10 @@ void Data::DrawNewCluster()
 {
     DrawDQDX();
     DrawMCCompare();
+    Draw3D();
     // DrawComDtheta();
     DrawProj();
     DrawPoint(0);
-    Draw3D();
 }
 
 int Data::FindClusterIndex(double x, double y)
