@@ -20,6 +20,7 @@
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TLine.h"
+#include "TLatex.h"
 
 
 #include <vector>
@@ -267,11 +268,14 @@ void Data::DrawDQDX()
 
     for (size_t i=0; i<sub_id.size(); i++) {
         cout << sub_id[i] << ", " << sub_start_index[i] << ", " << sub_end_index[i] << endl;
-        TLine *line = new TLine(
-            g->GetX()[sub_end_index[i]]+0.5, 0, 
-            g->GetX()[sub_end_index[i]]+0.5, 250);
+        double xloc = g->GetX()[sub_end_index[i]];
+        TLine *line = new TLine(xloc+0.2, 0, xloc+0.5, 250);
         line->SetLineColorAlpha(kRed, 0.5);
         line->Draw();
+
+        TLatex *tex = new TLatex(xloc, 255, TString::Format("%d", sub_id[i]%1000));
+        tex->SetTextColor(kRed);
+        tex->Draw();
     }
     
 
@@ -318,7 +322,7 @@ void Data::DrawDQDX()
         l1->SetTextColor(kBlack);
         TLegendEntry *l2 = leg->AddEntry(g_reduced_chi2, "#chi_{red.} x10", "l");
         l2->SetTextColor(kBlue);
-        leg->Draw();
+        // leg->Draw();
     }
 
 
@@ -733,7 +737,7 @@ void Data::DrawSubclusters()
     const int NC = 7;
     int colors[] = {1, 6, 2, 4, 8, 7, 28}; 
     const int NM = 3;
-    int markers[] = {25, 26, 32}; 
+    int markers[] = {32, 25, 26}; 
 
     for (int k=0; k<3; k++) {
         int pad = pad_proj+k;
@@ -755,27 +759,20 @@ void Data::DrawSubclusters()
         }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
+    }        
+    
+    TLegend *leg = new TLegend(0.15, 0.50, 0.87, 0.87);
+    for (int i=1; i<nSub; i++) {
+        leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "lp");
     }
-
-
-
-    // for (int i=0; i<size2; i++) {
-    //     double u = rec_u->at(currentCluster).at(i);
-    //     double v = rec_v->at(currentCluster).at(i);
-    //     double w = rec_w->at(currentCluster).at(i);
-    //     double t = rec_t->at(currentCluster).at(i);
-    //     int id = sub_cluster_id->at(currentCluster).at(i);
-    //     // double q = rec_dQ->at(bin).at(i);
-    //     // g_rec_u->SetPoint(i, u, t);
-    //     // g_rec_v->SetPoint(i, v, t);
-    //     // g_rec_w->SetPoint(i, w, t);
-    //     for (int j=0; j<nSub; j++) {
-    //         if (i>=sub_start_index[j] && i<=sub_end_index[j]) {
-    //             g_subclusters_u[j]->SetPoint(i, u, t);
-
-    //         }
-    //     }
-    // }
+    int pad = pad_dqdx+1;
+    c1->cd(pad);    
+    TH2F *hInfo = (TH2F*)gROOT->FindObject("hInfo");
+    if (hInfo) { delete hInfo;}
+    hInfo = new TH2F("hInfo","Info", 10, 0, 1, 10, 0, 1);
+    hInfo->Draw();
+    leg->SetNColumns(5);
+    leg->Draw();
 
 }
 
