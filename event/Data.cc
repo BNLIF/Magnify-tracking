@@ -785,9 +785,11 @@ void Data::DrawSubclusters()
         g_subclusters_3d[i]->Draw("pLINE,same");
     }  
     
-    TLegend *leg = new TLegend(0.15, 0.50, 0.87, 0.87);
+    TLegend *leg = new TLegend(0.15, 0.40, 0.87, 0.87);
     for (int i=1; i<nSub; i++) {
-        leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "lp");
+        TLegendEntry* le = leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "p");
+        le->SetTextColor(colors[i%NC]);
+        // le->SetMarkerSize(1.1);
     }
     c1->cd(pad_dqdx+1);    
     TH2F *hInfo = (TH2F*)gROOT->FindObject("hInfo");
