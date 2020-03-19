@@ -225,8 +225,17 @@ void Data::LoadBadCh()
     }
 }
 
+void Data::Clear()
+{
+    sub_id.clear();
+    sub_start_index.clear();
+    sub_end_index.clear();
+}
+
 void Data::DrawDQDX()
 {
+    Clear();
+    
     TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
     if (g) {
         delete g;

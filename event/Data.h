@@ -119,6 +119,7 @@ public:
     void DrawMCCompare();
 
     void DrawNewCluster();
+    void Clear();
 
     int FindClusterIndex(double x, double y);
 
