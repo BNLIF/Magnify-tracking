@@ -13,6 +13,7 @@ class TMarker;
 class TLine;
 class TGraph;
 class TGraph2D;
+class TLatex;
 
 class Data {
 public:
@@ -101,6 +102,7 @@ public:
     vector<TGraph*> g_subclusters_v;
     vector<TGraph*> g_subclusters_w;
     vector<TGraph2D*> g_subclusters_3d;
+    TLatex *infoText;
 
     void LoadRec();
     void LoadProj();
@@ -122,6 +124,7 @@ public:
     void Clear();
 
     int FindClusterIndex(double x, double y);
+    int FindPointIndex(double x, double y);
 
 
 private:

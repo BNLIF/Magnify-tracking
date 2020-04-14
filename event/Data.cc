@@ -46,6 +46,7 @@ Data::Data(const char* filename, int sign)
     currentCluster = 0;
     doDrawBadCh = false;
     doDrawTrack = true;
+    infoText = new TLatex(0.08, 0.20, "");
 
     rootFile = 0;
     T_true = 0;
@@ -807,6 +808,7 @@ void Data::DrawSubclusters()
     hInfo->Draw();
     leg->SetNColumns(5);
     leg->Draw();
+    infoText->Draw();
 
 }
 
@@ -948,12 +950,34 @@ int Data::FindClusterIndex(double x, double y)
         for (int j=0; j<size; j++) {
             double xx = rec->at(i).at(j);
             double yy = rec_t->at(i).at(j);
-            if (TMath::Abs(x-xx)<20 && TMath::Abs(y-yy)<20) {
+            if (TMath::Abs(x-xx)<10 && TMath::Abs(y-yy)<10) {
                 foundClusterIndex = i;
             }
         }
     }
     return foundClusterIndex;
+
+}
+
+int Data::FindPointIndex(double x, double y)
+{
+    int foundIndex = -1;
+    vector<vector<double> >* rec=0;
+    if (x>0 && x<nChannel_u) { rec = rec_u; }
+    else if (x>nChannel_u && x<nChannel_u+nChannel_v) { rec = rec_v; }
+    else if (x>nChannel_u+nChannel_v && x<nChannel_u+nChannel_v+nChannel_w) { rec = rec_w; }
+
+    if(!rec) { return -1; }
+
+    int size = rec->at(currentCluster).size();
+    for (int i=0; i<size; i++) {
+        double xx = rec->at(currentCluster).at(i);
+        double yy = rec_t->at(currentCluster).at(i);
+        if (TMath::Abs(x-xx)<5 && TMath::Abs(y-yy)<5) {
+            foundIndex = i;
+        }
+    }
+    return foundIndex;
 
 }
 

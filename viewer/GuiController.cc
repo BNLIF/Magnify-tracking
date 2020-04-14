@@ -22,6 +22,7 @@
 #include "TBox.h"
 #include "TLine.h"
 #include "TColor.h"
+#include "TLatex.h"
 
 #include <iostream>
 #include <vector>
@@ -218,8 +219,19 @@ void GuiController::ProcessCanvasEvent(Int_t ev, Int_t x, Int_t y, TObject *sele
         int padNo = pad->GetNumber();
         double xx = pad->AbsPixeltoX(x);
         double yy = pad->AbsPixeltoY(y);
+        int ci = data->FindClusterIndex(xx, yy);
+        int pi = data->FindPointIndex(xx, yy);
         cout << "pad " << padNo << ": (" << xx << ", " << yy << ")" 
-            << "; cluster index: " << data->FindClusterIndex(xx, yy) << endl;
+            << "; cluster index: " << ci
+            << "; point index: " << pi
+            << endl;
+        TString text = TString::Format("(%.0f, %.0f): point index %d", xx, yy, pi);
+        data->infoText->SetText(data->infoText->GetX(), data->infoText->GetY(), text.Data());
+        TVirtualPad *infoPad = vw->can->GetPad(data->pad_dqdx+1);
+        infoPad->cd();
+        infoPad->Modified();
+        infoPad->Update();
+
         if (selected->IsA() == TGraph::Class() && padNo <=3) { // first row tgraph clicked
             TGraph *g = (TGraph*)gROOT->FindObject("g_dqdx");
             currentPointIndex = TMath::BinarySearch(g->GetN(), g->GetX(), xx);
