@@ -150,7 +150,7 @@ void GuiController::SetCurrentCluster(int newCluster)
     cw->pointIndexEntry->SetNumber(0);
 }
 
-void GuiController::ClusterChanged(int i)
+void GuiController::ClusterChanged(int /*i*/)
 {
     int newCluster = cw->clusterEntry->GetNumber();
     if (newCluster == currentCluster) return;
@@ -165,7 +165,7 @@ void GuiController::ClusterChanged(int i)
 
 }
 
-void GuiController::ClusterIdChanged(int i)
+void GuiController::ClusterIdChanged(int /*i*/)
 {
     int newId = cw->clusterIdEntry->GetNumber();
     int newCluster = data->rec_cluster_map[newId];

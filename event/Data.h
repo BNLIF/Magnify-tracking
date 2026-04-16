@@ -12,7 +12,9 @@ class TCanvas;
 class TMarker;
 class TLine;
 class TGraph;
-class TGraph2D;
+class TH3F;
+class TPolyLine3D;
+class TPolyMarker3D;
 class TLatex;
 
 class Data {
@@ -101,7 +103,13 @@ public:
     vector<TGraph*> g_subclusters_u;
     vector<TGraph*> g_subclusters_v;
     vector<TGraph*> g_subclusters_w;
-    vector<TGraph2D*> g_subclusters_3d;
+    vector<TPolyLine3D*>   g_subclusters_3d_lines;
+    vector<TPolyMarker3D*> g_subclusters_3d_marks;
+    TH3F          *h_3d_frame;
+    TPolyMarker3D *g_3d_points;
+    TPolyLine3D   *gt_3d_line;
+    TPolyMarker3D *g_3d_start;
+    TPolyMarker3D *currentPoint3d;
     TLatex *infoText;
 
     void LoadRec();

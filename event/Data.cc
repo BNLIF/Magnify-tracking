@@ -12,10 +12,11 @@
 #include "TPaletteAxis.h"
 #include "TGraph.h"
 #include "TROOT.h"
-#include "TGraph2D.h"
+#include "TH3F.h"
+#include "TPolyLine3D.h"
+#include "TPolyMarker3D.h"
 #include "TCanvas.h"
 #include "TMarker.h"
-#include "TPolyMarker3D.h"
 #include "TGaxis.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
@@ -101,6 +102,16 @@ Data::Data(const char* filename, int sign)
     dqdxPoint->SetMarkerColor(6);
     dqdxPoint->SetMarkerSize(4);
 
+    h_3d_frame  = nullptr;
+    g_3d_points = nullptr;
+    gt_3d_line  = nullptr;
+    g_3d_start  = nullptr;
+
+    currentPoint3d = new TPolyMarker3D(1);
+    currentPoint3d->SetMarkerStyle(24);
+    currentPoint3d->SetMarkerColor(6);
+    currentPoint3d->SetMarkerSize(2);
+
     LoadData(filename);
 }
 
@@ -115,7 +126,7 @@ void Data::LoadData(const char* filename)
     }
 
     T_true = (TTree*)rootFile->Get("T_true");
-    T_rec = (TTree*)rootFile->Get("T_rec");
+    T_rec = (TTree*)rootFile->Get("T_rec"); // modifyed from T_rec
     T_proj = (TTree*)rootFile->Get("T_proj");
     T_proj_data = (TTree*)rootFile->Get("T_proj_data");
     T_bad_ch = (TTree*)rootFile->Get("T_bad_ch");
@@ -658,23 +669,25 @@ void Data::ZoomProj(int pointIndex, int zoomBin, int t0, int t1, int u0, int u1,
     c1->GetPad(pad_pred+2)->Modified();
     c1->GetPad(pad_pred+2)->Update();
 
-    // zoom 3D
-    double x =  rec_x->at(currentCluster).at(pointIndex);
-    double y =  rec_y->at(currentCluster).at(pointIndex);
-    double z =  rec_z->at(currentCluster).at(pointIndex);
-    TGraph2D *g = (TGraph2D*)gROOT->FindObject("g_3d");
-    if (zoomBin<0) {
-        g->GetXaxis()->UnZoom();
-        g->GetYaxis()->UnZoom();
-        g->GetZaxis()->UnZoom();
+    // zoom 3D (ROOT-X=reco-z, ROOT-Y=reco-x, ROOT-Z=reco-y)
+    {
+        double xr = rec_x->at(currentCluster).at(pointIndex);
+        double yr = rec_y->at(currentCluster).at(pointIndex);
+        double zr = rec_z->at(currentCluster).at(pointIndex);
+        if (h_3d_frame) {
+            if (zoomBin<0) {
+                h_3d_frame->GetXaxis()->UnZoom();
+                h_3d_frame->GetYaxis()->UnZoom();
+                h_3d_frame->GetZaxis()->UnZoom();
+            } else {
+                h_3d_frame->GetXaxis()->SetRangeUser(zr-zoomBin*0.3, zr+zoomBin*0.3);
+                h_3d_frame->GetYaxis()->SetRangeUser(xr-zoomBin*0.3, xr+zoomBin*0.3);
+                h_3d_frame->GetZaxis()->SetRangeUser(yr-zoomBin*0.3, yr+zoomBin*0.3);
+            }
+            c1->GetPad(pad_3d)->Modified();
+            c1->GetPad(pad_3d)->Update();
+        }
     }
-    else {
-        g->GetXaxis()->SetRangeUser(z-zoomBin*0.3, z+zoomBin*0.3);
-        g->GetYaxis()->SetRangeUser(x-zoomBin*0.3, x+zoomBin*0.3);
-        g->GetZaxis()->SetRangeUser(y-zoomBin*0.3, y+zoomBin*0.3);
-    }
-    c1->GetPad(pad_3d)->Modified();
-    c1->GetPad(pad_3d)->Update();
 
     // zoom 1D
     TGraph *g_dqdx = (TGraph*)gROOT->FindObject("g_dqdx");
@@ -706,13 +719,18 @@ void Data::DrawSubclusters()
         }
         pg[k]->clear();
     }
-    if (g_subclusters_3d.size()>0) {
-        for (size_t i=0; i<g_subclusters_3d.size(); i++) {
-            delete g_subclusters_3d.at(i);
-        }
-    }
-    g_subclusters_3d.clear();
 
+    // 3D sub-cluster cleanup is handled by Draw3D (via pad->Clear("nodelete")).
+    // Vectors are already empty when DrawSubclusters is called from DrawNewCluster.
+    // On ToggleDrawTrack re-entry (DrawSubclusters called without Draw3D), the
+    // vectors may be non-empty; clear them here using the same nodelete strategy.
+    if (!g_subclusters_3d_lines.empty()) {
+        c1->GetPad(pad_3d)->Clear("nodelete");
+        for (size_t i=0; i<g_subclusters_3d_lines.size(); i++) delete g_subclusters_3d_lines[i];
+        g_subclusters_3d_lines.clear();
+        for (size_t i=0; i<g_subclusters_3d_marks.size(); i++) delete g_subclusters_3d_marks[i];
+        g_subclusters_3d_marks.clear();
+    }
 
     int nSub = sub_id.size();
     cout << "#sub clusters: " << nSub << endl;
@@ -721,48 +739,42 @@ void Data::DrawSubclusters()
         for (int k=0; k<3; k++) {
             pg[k]->push_back( new TGraph(nPoints) );
         }
-        g_subclusters_3d.push_back( new TGraph2D(nPoints) );
-        g_subclusters_3d[i]->SetName( TString::Format("g_3d_%i", sub_id[i]%1000) );
-
+        g_subclusters_3d_lines.push_back(new TPolyLine3D(nPoints));
+        g_subclusters_3d_marks.push_back(new TPolyMarker3D(nPoints));
     }
-    // cout << "g_subclusters_v: " << g_subclusters_v.size() << endl;
-
 
     int allPoints = rec_u->at(currentCluster).size();
     int i = 0;
     int currentSub = 0;
     int currentPointInSub = 0;
-    while (i < allPoints) {
+    while (i < allPoints && currentSub < nSub) {
         double u = rec_u->at(currentCluster).at(i);
         double v = rec_v->at(currentCluster).at(i);
         double w = rec_w->at(currentCluster).at(i);
         double t = rec_t->at(currentCluster).at(i);
-        int id = sub_cluster_id->at(currentCluster).at(i);
 
         g_subclusters_u[currentSub]->SetPoint(currentPointInSub, u, t);
         g_subclusters_v[currentSub]->SetPoint(currentPointInSub, v, t);
         g_subclusters_w[currentSub]->SetPoint(currentPointInSub, w, t);
 
-        g_subclusters_3d[currentSub]->SetPoint(currentPointInSub,
-            rec_z->at(currentCluster).at(i),
-            rec_x->at(currentCluster).at(i),
-            rec_y->at(currentCluster).at(i)
-        );
+        double zr = rec_z->at(currentCluster).at(i);
+        double xr = rec_x->at(currentCluster).at(i);
+        double yr = rec_y->at(currentCluster).at(i);
+        g_subclusters_3d_lines[currentSub]->SetPoint(currentPointInSub, zr, xr, yr);
+        g_subclusters_3d_marks[currentSub]->SetPoint(currentPointInSub, zr, xr, yr);
 
         i++;
         currentPointInSub++;
-        
+
         if (i>sub_end_index[currentSub]) {
             currentSub++;
             currentPointInSub = 0;
         }
-
     }
-
     const int NC = 7;
-    int colors[] = {1, 6, 2, 4, 8, 7, 28}; 
+    int colors[] = {1, 6, 2, 4, 8, 7, 28};
     const int NM = 3;
-    int markers[] = {32, 25, 26}; 
+    int markers[] = {32, 25, 26};
 
     for (int k=0; k<3; k++) {
         int pad = pad_proj+k;
@@ -784,24 +796,28 @@ void Data::DrawSubclusters()
         }
         c1->GetPad(pad)->Modified();
         c1->GetPad(pad)->Update();
-    }      
+    }
 
     c1->cd(pad_3d);
     for (int i=1; i<nSub; i++) {
-        g_subclusters_3d[i]->SetLineWidth(2);
-        g_subclusters_3d[i]->SetMarkerSize(0.5);
-        g_subclusters_3d[i]->SetLineColor(colors[i%NC]);
-        g_subclusters_3d[i]->SetMarkerStyle(markers[i%NM]);
-        g_subclusters_3d[i]->Draw("pLINE,same");
-    }  
-    
+        g_subclusters_3d_lines[i]->SetLineWidth(2);
+        g_subclusters_3d_lines[i]->SetLineColor(colors[i%NC]);
+        g_subclusters_3d_lines[i]->Draw();
+
+        g_subclusters_3d_marks[i]->SetMarkerSize(0.5);
+        g_subclusters_3d_marks[i]->SetMarkerColor(colors[i%NC]);
+        g_subclusters_3d_marks[i]->SetMarkerStyle(markers[i%NM]);
+        g_subclusters_3d_marks[i]->Draw();
+    }
+    c1->GetPad(pad_3d)->Modified();
+    c1->GetPad(pad_3d)->Update();
+
     TLegend *leg = new TLegend(0.15, 0.40, 0.87, 0.87);
     for (int i=1; i<nSub; i++) {
         TLegendEntry* le = leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "p");
         le->SetTextColor(colors[i%NC]);
-        // le->SetMarkerSize(1.1);
     }
-    c1->cd(pad_dqdx+1);    
+    c1->cd(pad_dqdx+1);
     TH2F *hInfo = (TH2F*)gROOT->FindObject("hInfo");
     if (hInfo) { delete hInfo;}
     hInfo = new TH2F("hInfo","Info", 10, 0, 1, 10, 0, 1);
@@ -834,6 +850,18 @@ void Data::DrawPoint(int pointIndex)
         c1->GetPad(pad_proj+i)->Update();
     }
 
+    // highlight same point in 3D view
+    if (currentPoint3d) {
+        currentPoint3d->SetPoint(0,
+            rec_z->at(currentCluster).at(pointIndex),
+            rec_x->at(currentCluster).at(pointIndex),
+            rec_y->at(currentCluster).at(pointIndex));
+        c1->cd(pad_3d);
+        currentPoint3d->Draw();
+        c1->GetPad(pad_3d)->Modified();
+        c1->GetPad(pad_3d)->Update();
+    }
+
 }
 
 void Data::DrawBadCh()
@@ -863,61 +891,111 @@ void Data::DrawBadCh()
 
 void Data::Draw3D()
 {
-    TGraph2D *g = (TGraph2D*)gROOT->FindObject("g_3d");
-    if (g) {delete g;}
+    c1->cd(pad_3d);
 
-    TGraph2D *gt = (TGraph2D*)gROOT->FindObject("gt_3d");
-    if (gt) {delete gt;}
+    // Remove ALL primitives from pad_3d without deleting them. This preempts
+    // TH3F::Paint's internal gPad->Clear() from double-freeing our objects
+    // during the canvas repaint triggered by later DrawProj pad updates.
+    c1->GetPad(pad_3d)->Clear("nodelete");
+
+    // Safe to delete now: removed from pad by Clear above.
+    if (h_3d_frame) { delete h_3d_frame; h_3d_frame = nullptr; }
+    if (g_3d_points) { delete g_3d_points; g_3d_points = nullptr; }
+    if (gt_3d_line)  { delete gt_3d_line;  gt_3d_line  = nullptr; }
+    if (g_3d_start)  { delete g_3d_start;  g_3d_start  = nullptr; }
+
+    // Sub-cluster 3D objects from previous DrawSubclusters call are also
+    // removed from the pad by Clear above; delete them here.
+    for (size_t i=0; i<g_subclusters_3d_lines.size(); i++) delete g_subclusters_3d_lines[i];
+    g_subclusters_3d_lines.clear();
+    for (size_t i=0; i<g_subclusters_3d_marks.size(); i++) delete g_subclusters_3d_marks[i];
+    g_subclusters_3d_marks.clear();
 
     int nPoints = rec_x->at(currentCluster).size();
-    g = new TGraph2D(nPoints);
-    g->SetName("g_3d");
-    g->SetTitle("");
+
+    // Compute bounding box. Coordinate mapping (preserved from original):
+    //   ROOT-X = reco-z,  ROOT-Y = reco-x,  ROOT-Z = reco-y
+    double xMin= 1e30, xMax=-1e30;
+    double yMin= 1e30, yMax=-1e30;
+    double zMin= 1e30, zMax=-1e30;
     for (int i=0; i<nPoints; i++) {
-        g->SetPoint(i,
+        double X = rec_z->at(currentCluster).at(i);
+        double Y = rec_x->at(currentCluster).at(i);
+        double Z = rec_y->at(currentCluster).at(i);
+        if (X<xMin) xMin=X;  if (X>xMax) xMax=X;
+        if (Y<yMin) yMin=Y;  if (Y>yMax) yMax=Y;
+        if (Z<zMin) zMin=Z;  if (Z>zMax) zMax=Z;
+    }
+    if (!isData) {
+        int nt = (int)true_x->at(0).size();
+        for (int i=0; i<nt; i++) {
+            double X = true_z->at(0).at(i);
+            double Y = true_x->at(0).at(i);
+            double Z = true_y->at(0).at(i);
+            if (X<xMin) xMin=X;  if (X>xMax) xMax=X;
+            if (Y<yMin) yMin=Y;  if (Y>yMax) yMax=Y;
+            if (Z<zMin) zMin=Z;  if (Z>zMax) zMax=Z;
+        }
+    }
+    // 5% margin on each axis; floor span to 1 cm so single-point cluster
+    // still yields a visible frame.
+    double frameMargin = 0.05;
+    double dx = std::max(xMax-xMin, 1.0) * frameMargin;
+    double dy = std::max(yMax-yMin, 1.0) * frameMargin;
+    double dz = std::max(zMax-zMin, 1.0) * frameMargin;
+    xMin -= dx; xMax += dx;
+    yMin -= dy; yMax += dy;
+    zMin -= dz; zMax += dz;
+
+    // Empty TH3F frame: establishes TView3D on pad_3d and provides the axes
+    // that ZoomProj calls SetRangeUser/UnZoom on. No bins filled -> no mesh.
+    h_3d_frame = new TH3F("h_3d_frame", "",
+                          10, xMin, xMax,
+                          10, yMin, yMax,
+                          10, zMin, zMax);
+    h_3d_frame->SetDirectory(0);
+    h_3d_frame->SetStats(0);
+    h_3d_frame->GetXaxis()->SetTitle("z [cm]");
+    h_3d_frame->GetYaxis()->SetTitle("x [cm]");
+    h_3d_frame->GetZaxis()->SetTitle("y [cm]");
+    h_3d_frame->Draw();
+
+    // Base point cloud: small gray dots for all reco hits. The sub-cluster
+    // overlay (drawn later by DrawSubclusters) provides the bright coloring.
+    g_3d_points = new TPolyMarker3D(nPoints);
+    for (int i=0; i<nPoints; i++) {
+        g_3d_points->SetPoint(i,
             rec_z->at(currentCluster).at(i),
             rec_x->at(currentCluster).at(i),
-            rec_y->at(currentCluster).at(i)
-        );
+            rec_y->at(currentCluster).at(i));
     }
-    g->GetXaxis()->SetTitle("z [cm]");
-    g->GetYaxis()->SetTitle("x [cm]");
-    g->GetZaxis()->SetTitle("y [cm]");
+    g_3d_points->SetMarkerStyle(1);
+    g_3d_points->SetMarkerColor(15);
+    g_3d_points->SetMarkerSize(0.3);
+    g_3d_points->Draw();
 
+    if (!isData) {
+        int nt = (int)true_x->at(0).size();
+        gt_3d_line = new TPolyLine3D(nt);
+        for (int i=0; i<nt; i++) {
+            gt_3d_line->SetPoint(i,
+                true_z->at(0).at(i),
+                true_x->at(0).at(i),
+                true_y->at(0).at(i));
+        }
+        gt_3d_line->SetLineColor(2);
+        gt_3d_line->SetLineWidth(2);
+        gt_3d_line->Draw();
 
-
-    if (!isData){
-      nPoints = true_x->at(0).size();
-      gt = new TGraph2D(nPoints);
-      gt->SetName("gt_3d");
-      gt->SetTitle("");
-      for (int i=0; i<nPoints; i++) {
-        gt->SetPoint(i,
-            true_z->at(0).at(i),
-            true_x->at(0).at(i),
-            true_y->at(0).at(i)
-        );
-      }
-      gt->SetLineColor(2);
-      gt->GetXaxis()->SetTitle("z [cm]");
-      gt->GetYaxis()->SetTitle("x [cm]");
-      gt->GetZaxis()->SetTitle("y [cm]");
-    }
-
-
-    c1->cd(pad_3d);
-    // g->Draw("pLINE");
-    g->SetMarkerSize(0);
-    g->Draw("p");
-
-    if(!isData){
-        gt->Draw("LINEsame");
-        TPolyMarker3D *gm = new TPolyMarker3D();
-        gm->SetPoint(0,rec_z->at(currentCluster).front(),rec_x->at(currentCluster).front(),rec_y->at(currentCluster).front());
-        gm->SetMarkerColor(4);
-        gm->SetMarkerStyle(29);
-        gm->SetMarkerSize(2);
-        gm->Draw("*same");
+        g_3d_start = new TPolyMarker3D(1);
+        g_3d_start->SetPoint(0,
+            rec_z->at(currentCluster).front(),
+            rec_x->at(currentCluster).front(),
+            rec_y->at(currentCluster).front());
+        g_3d_start->SetMarkerColor(4);
+        g_3d_start->SetMarkerStyle(29);
+        g_3d_start->SetMarkerSize(2);
+        g_3d_start->Draw();
     }
 
     c1->GetPad(pad_3d)->Modified();
@@ -1193,4 +1271,11 @@ void Data::DrawProjAll(int t0, int t1, int u0, int u1, int v0, int v1, int w0, i
 Data::~Data()
 {
     delete rootFile;
+    delete h_3d_frame;
+    delete g_3d_points;
+    delete gt_3d_line;
+    delete g_3d_start;
+    delete currentPoint3d;
+    for (size_t i=0; i<g_subclusters_3d_lines.size(); i++) delete g_subclusters_3d_lines[i];
+    for (size_t i=0; i<g_subclusters_3d_marks.size(); i++) delete g_subclusters_3d_marks[i];
 }
