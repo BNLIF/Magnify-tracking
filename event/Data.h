@@ -33,47 +33,47 @@ public:
     TTree *T_proj_data;
     TTree *T_bad_ch;
 
-    vector<int> *rec_cluster_id;
-    vector<vector<double> >* rec_x;
-    vector<vector<double> >* rec_y;
-    vector<vector<double> >* rec_z;
-    vector<vector<double> >* rec_dQ;
-    vector<vector<double> >* rec_dx;
-    vector<vector<double> >* rec_L;
-    vector<vector<double> >* rec_u;
-    vector<vector<double> >* rec_v;
-    vector<vector<double> >* rec_w;
-    vector<vector<double> >* rec_t;
-    vector<vector<double> >* reduced_chi2;
-    vector<vector<double> >* com_dis;
-    vector<vector<double> >* com_dtheta;
-    vector<vector<double> >* true_dQ;
-    vector<vector<int> >* flag_vertex;
-    vector<vector<int> >* sub_cluster_id;
+    std::vector<int> *rec_cluster_id;
+    std::vector<std::vector<double> >* rec_x;
+    std::vector<std::vector<double> >* rec_y;
+    std::vector<std::vector<double> >* rec_z;
+    std::vector<std::vector<double> >* rec_dQ;
+    std::vector<std::vector<double> >* rec_dx;
+    std::vector<std::vector<double> >* rec_L;
+    std::vector<std::vector<double> >* rec_u;
+    std::vector<std::vector<double> >* rec_v;
+    std::vector<std::vector<double> >* rec_w;
+    std::vector<std::vector<double> >* rec_t;
+    std::vector<std::vector<double> >* reduced_chi2;
+    std::vector<std::vector<double> >* com_dis;
+    std::vector<std::vector<double> >* com_dtheta;
+    std::vector<std::vector<double> >* true_dQ;
+    std::vector<std::vector<int> >* flag_vertex;
+    std::vector<std::vector<int> >* sub_cluster_id;
     int nCluster;
     std::map<int, int> rec_cluster_map; // cluster id => index
-    vector<int> sub_id; // list of sub cluster IDs.
-    vector<int> sub_start_index;
-    vector<int> sub_end_index; 
+    std::vector<int> sub_id; // list of sub cluster IDs.
+    std::vector<int> sub_start_index;
+    std::vector<int> sub_end_index;
 
-    vector<int> *data_cluster_id;
-    vector<vector<int> >* data_channel;
-    vector<vector<int> >* data_time_slice;
-    vector<vector<int> >* data_charge;
-    vector<vector<int> >* data_charge_pred;
-    vector<vector<int> >* data_charge_err;
+    std::vector<int> *data_cluster_id;
+    std::vector<std::vector<int> >* data_channel;
+    std::vector<std::vector<int> >* data_time_slice;
+    std::vector<std::vector<int> >* data_charge;
+    std::vector<std::vector<int> >* data_charge_pred;
+    std::vector<std::vector<int> >* data_charge_err;
     std::map<int, int> data_cluster_map; // cluster id => index
 
-    vector<int> bad_id;
-    vector<int> bad_start;
-    vector<int> bad_end;
+    std::vector<int> bad_id;
+    std::vector<int> bad_start;
+    std::vector<int> bad_end;
 
-    vector<vector<double> >* true_x;
-    vector<vector<double> >* true_y;
-    vector<vector<double> >* true_z;
+    std::vector<std::vector<double> >* true_x;
+    std::vector<std::vector<double> >* true_y;
+    std::vector<std::vector<double> >* true_z;
 
-    vector<double>* stat_beg_dis;
-    vector<double>* stat_end_dis;
+    std::vector<double>* stat_beg_dis;
+    std::vector<double>* stat_end_dis;
 
 
 
@@ -99,18 +99,33 @@ public:
     bool doDrawTrack;
     TMarker *currentPoint[3];
     TMarker *dqdxPoint;
-    vector<TLine*> bad_lines;
-    vector<TGraph*> g_subclusters_u;
-    vector<TGraph*> g_subclusters_v;
-    vector<TGraph*> g_subclusters_w;
-    vector<TPolyLine3D*>   g_subclusters_3d_lines;
-    vector<TPolyMarker3D*> g_subclusters_3d_marks;
+    std::vector<TLine*> bad_lines;
+    std::vector<TGraph*> g_subclusters_u;
+    std::vector<TGraph*> g_subclusters_v;
+    std::vector<TGraph*> g_subclusters_w;
+    std::vector<TPolyLine3D*>   g_subclusters_3d_lines;
+    std::vector<TPolyMarker3D*> g_subclusters_3d_marks;
     TH3F          *h_3d_frame;
     TPolyMarker3D *g_3d_points;
     TPolyLine3D   *gt_3d_line;
     TPolyMarker3D *g_3d_start;
     TPolyMarker3D *currentPoint3d;
     TLatex *infoText;
+
+    // Persistent projection / prediction histograms. Allocated once via
+    // EnsureProjHistos() and Reset() between cluster changes.
+    TH2F *h_proj_u;
+    TH2F *h_proj_v;
+    TH2F *h_proj_w;
+    TH2F *h_pred_u;
+    TH2F *h_pred_v;
+    TH2F *h_pred_w;
+    TH2F *h_proj_u_all;
+    TH2F *h_proj_v_all;
+    TH2F *h_proj_w_all;
+    TH2F *h_pred_u_all;
+    TH2F *h_pred_v_all;
+    TH2F *h_pred_w_all;
 
     void LoadRec();
     void LoadProj();
@@ -137,6 +152,9 @@ public:
 
 private:
     void LoadData(const char* filename);
+    void EnsureProjHistos();
+    void EnsureProjAllHistos();
+    static double applySign(double residual, int sign);
 
 
 };

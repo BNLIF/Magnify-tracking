@@ -1,12 +1,12 @@
 #!/bin/bash
 
-magnify_source="$(dirname $(readlink -f $BASH_SOURCE))"
+magnify_source="$(cd "$(dirname "$BASH_SOURCE")" && pwd -P)"
 
 rootfile="$1" ; shift
 if [[ "$rootfile" =~ :// ]] ; then
     echo "Loading URL $rootfile"
 else
-    rootfile=$(readlink -f "$rootfile")
+    rootfile="$(cd "$(dirname "$rootfile")" && pwd -P)/$(basename "$rootfile")"
 fi
 sign="${1:-0}"
 # startdir=$(pwd)

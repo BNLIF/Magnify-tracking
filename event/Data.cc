@@ -35,6 +35,40 @@ using namespace std;
 Data::Data()
 {}
 
+double Data::applySign(double residual, int sign)
+{
+    if (sign == 0) {
+        return TMath::Abs(residual);
+    }
+    if (sign > 0) {
+        return residual < 0 ? 0.0 : residual;
+    }
+    // sign < 0
+    return residual > 0 ? 0.0 : TMath::Abs(residual);
+}
+
+void Data::EnsureProjHistos()
+{
+    if (h_proj_u) return;
+    h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
+    h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
+    h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
+    h_pred_u = new TH2F("h_pred_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
+    h_pred_v = new TH2F("h_pred_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
+    h_pred_w = new TH2F("h_pred_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
+}
+
+void Data::EnsureProjAllHistos()
+{
+    if (h_proj_u_all) return;
+    h_proj_u_all = new TH2F("h_proj_u_all", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
+    h_proj_v_all = new TH2F("h_proj_v_all", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
+    h_proj_w_all = new TH2F("h_proj_w_all", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
+    h_pred_u_all = new TH2F("h_pred_u_all", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
+    h_pred_v_all = new TH2F("h_pred_v_all", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
+    h_pred_w_all = new TH2F("h_pred_w_all", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
+}
+
 Data::Data(const char* filename, int sign)
 {
     this->sign = sign;
@@ -106,6 +140,11 @@ Data::Data(const char* filename, int sign)
     g_3d_points = nullptr;
     gt_3d_line  = nullptr;
     g_3d_start  = nullptr;
+
+    h_proj_u = nullptr; h_proj_v = nullptr; h_proj_w = nullptr;
+    h_pred_u = nullptr; h_pred_v = nullptr; h_pred_w = nullptr;
+    h_proj_u_all = nullptr; h_proj_v_all = nullptr; h_proj_w_all = nullptr;
+    h_pred_u_all = nullptr; h_pred_v_all = nullptr; h_pred_w_all = nullptr;
 
     currentPoint3d = new TPolyMarker3D(1);
     currentPoint3d->SetMarkerStyle(24);
@@ -195,6 +234,10 @@ void Data::LoadRec()
 
 void Data::LoadProj()
 {
+    if (!T_proj_data) {
+        cout << "no T_proj_data tree in the file ..." << endl;
+        return;
+    }
     T_proj_data->SetBranchAddress("cluster_id", &data_cluster_id);
     T_proj_data->SetBranchAddress("channel", &data_channel);
     T_proj_data->SetBranchAddress("time_slice", &data_time_slice);
@@ -317,7 +360,7 @@ void Data::DrawDQDX()
     }
 
     TGraph *g_reduced_chi2 = (TGraph*)gROOT->FindObject("g_reduced_chi2");
-    if (reduced_chi2->size()>0) {
+    if (reduced_chi2->size() > (size_t)currentCluster) {
         if (g_reduced_chi2) {
             delete g_reduced_chi2;
         }
@@ -414,63 +457,43 @@ void Data::DrawMCCompare()
 void Data::DrawProj()
 {
     int cluster_id = rec_cluster_id->at(currentCluster);
-    int index = data_cluster_map[cluster_id];
+    auto it = data_cluster_map.find(cluster_id);
+    if (it == data_cluster_map.end()) {
+        cout << "DrawProj: no projection data for cluster id " << cluster_id << endl;
+        return;
+    }
+    int index = it->second;
 
-    TH2F *h_proj_u = (TH2F*)gROOT->FindObject("h_proj_u");
-    TH2F *h_proj_v = (TH2F*)gROOT->FindObject("h_proj_v");
-    TH2F *h_proj_w = (TH2F*)gROOT->FindObject("h_proj_w");
+    EnsureProjHistos();
+    h_proj_u->Reset("ICES");
+    h_proj_v->Reset("ICES");
+    h_proj_w->Reset("ICES");
+    h_pred_u->Reset("ICES");
+    h_pred_v->Reset("ICES");
+    h_pred_w->Reset("ICES");
 
     TGraph *g_rec_u = (TGraph*)gROOT->FindObject("g_rec_u");
     TGraph *g_rec_v = (TGraph*)gROOT->FindObject("g_rec_v");
     TGraph *g_rec_w = (TGraph*)gROOT->FindObject("g_rec_w");
-
-    TH2F *h_pred_u = (TH2F*)gROOT->FindObject("h_pred_u");
-    TH2F *h_pred_v = (TH2F*)gROOT->FindObject("h_pred_v");
-    TH2F *h_pred_w = (TH2F*)gROOT->FindObject("h_pred_w");
-
-    if (h_proj_u) { delete h_proj_u;}
-    if (h_proj_v) { delete h_proj_v;}
-    if (h_proj_w) { delete h_proj_w;}
-
     if (g_rec_u) { delete g_rec_u;}
     if (g_rec_v) { delete g_rec_v;}
     if (g_rec_w) { delete g_rec_w;}
 
-    if (h_pred_u) { delete h_pred_u;}
-    if (h_pred_v) { delete h_pred_v;}
-    if (h_pred_w) { delete h_pred_w;}
-
-    h_proj_u = new TH2F("h_proj_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
-    h_proj_v = new TH2F("h_proj_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
-    h_proj_w = new TH2F("h_proj_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
-
-    h_pred_u = new TH2F("h_pred_u", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);
-    h_pred_v = new TH2F("h_pred_v", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);
-    h_pred_w = new TH2F("h_pred_w", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);
-
     TH2F *h[3] = {h_proj_u, h_proj_v, h_proj_w};
     TH2F *hpred[3] = {h_pred_u, h_pred_v, h_pred_w};
-    int size = data_channel->at(index).size();
+    const auto& chs   = data_channel->at(index);
+    const auto& ts    = data_time_slice->at(index);
+    const auto& zs    = data_charge->at(index);
+    const auto& zpres = data_charge_pred->at(index);
+    int size = chs.size();
     TH2F *hc = 0;
     TH2F *hp = 0;
     for (int i=0; i<size; i++) {
-        int x = data_channel->at(index).at(i);
-        int y = data_time_slice->at(index).at(i);
-        int z = data_charge->at(index).at(i);
-        double charge_pred = data_charge_pred->at(index).at(i);
-        double z_pred = (charge_pred-z+0.01)/(z+0.01);
-        if (sign == 0) {
-            z_pred = TMath::Abs(z_pred);
-        }
-        else if (sign>0) {
-            if (z_pred<0) z_pred = 0;
-        }
-        else {
-            if (z_pred>0) z_pred = 0;
-            else z_pred = TMath::Abs(z_pred);
-        }
-        // double z_pred = TMath::Abs(charge_pred-z+0.01);
-        // double z_pred = abs(charge_pred-z+0.01)/(data_charge_err->at(index).at(i)+0.01);
+        int x = chs[i];
+        int y = ts[i];
+        int z = zs[i];
+        double charge_pred = zpres[i];
+        double z_pred = applySign((charge_pred-z+0.01)/(z+0.01), sign);
         if (x<nChannel_u) {
             hc = h_proj_u;
             hp = h_pred_u;
@@ -489,21 +512,21 @@ void Data::DrawProj()
         hp->SetBinContent(x+1, y+1, z_pred);
     }
 
-    int size2 = rec_u->at(currentCluster).size();
+    const auto& us = rec_u->at(currentCluster);
+    const auto& vs = rec_v->at(currentCluster);
+    const auto& ws = rec_w->at(currentCluster);
+    const auto& tts = rec_t->at(currentCluster);
+    int size2 = us.size();
     g_rec_u = new TGraph(size2);
     g_rec_v = new TGraph(size2);
     g_rec_w = new TGraph(size2);
     TGraph *g[3] = {g_rec_u, g_rec_v, g_rec_w};
 
     for (int i=0; i<size2; i++) {
-        double u = rec_u->at(currentCluster).at(i);
-        double v = rec_v->at(currentCluster).at(i);
-        double w = rec_w->at(currentCluster).at(i);
-        double t = rec_t->at(currentCluster).at(i);
-        // double q = rec_dQ->at(bin).at(i);
-        g_rec_u->SetPoint(i, u, t);
-        g_rec_v->SetPoint(i, v, t);
-        g_rec_w->SetPoint(i, w, t);
+        double t = tts[i];
+        g_rec_u->SetPoint(i, us[i], t);
+        g_rec_v->SetPoint(i, vs[i], t);
+        g_rec_w->SetPoint(i, ws[i], t);
     }
     for (int i=0; i<3; i++) {
         h[i]->SetTitle("Measured Charge");
@@ -546,6 +569,23 @@ void Data::DrawProj()
     DrawBadCh();
 }
 
+static void zoomHisto(TH2F *h, int zoomBin, int t0, int t1, int x0, int x1, int xCenter, int tCenter)
+{
+    if (!h) return;
+    if (zoomBin < 0) {
+        if (t0 < -1) {
+            h->GetXaxis()->UnZoom();
+            h->GetYaxis()->UnZoom();
+        } else {
+            h->GetXaxis()->SetRangeUser(x0, x1);
+            h->GetYaxis()->SetRangeUser(t0, t1);
+        }
+    } else {
+        h->GetXaxis()->SetRangeUser(xCenter-zoomBin, xCenter+zoomBin);
+        h->GetYaxis()->SetRangeUser(tCenter-zoomBin, tCenter+zoomBin);
+    }
+}
+
 void Data::ZoomProj(int pointIndex, int zoomBin, int t0, int t1, int u0, int u1, int v0, int v1, int w0, int w1)
 {
     int u =  rec_u->at(currentCluster).at(pointIndex);
@@ -560,112 +600,27 @@ void Data::ZoomProj(int pointIndex, int zoomBin, int t0, int t1, int u0, int u1,
     cout << " t: " << t;
     cout << endl;
 
-    TH2F *h = (TH2F*)gROOT->FindObject("h_proj_u");
-    if (zoomBin<0) {
-        if (t0<-1) {
-            h->GetXaxis()->UnZoom();
-            h->GetYaxis()->UnZoom();
-        }
-        else {
-            h->GetXaxis()->SetRangeUser(u0, u1);
-            h->GetYaxis()->SetRangeUser(t0, t1);
-        }
-    }
-    else {
-        h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
-        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
-    }
+    zoomHisto(h_proj_u, zoomBin, t0, t1, u0, u1, u, t);
     c1->GetPad(pad_proj)->Modified();
     c1->GetPad(pad_proj)->Update();
 
-    h = (TH2F*)gROOT->FindObject("h_proj_v");
-    if (zoomBin<0) {
-        if (t0<-1) {
-            h->GetXaxis()->UnZoom();
-            h->GetYaxis()->UnZoom();
-        }
-        else {
-            h->GetXaxis()->SetRangeUser(v0, v1);
-            h->GetYaxis()->SetRangeUser(t0, t1);
-        }
-    }
-    else {
-        h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
-        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
-    }
+    zoomHisto(h_proj_v, zoomBin, t0, t1, v0, v1, v, t);
     c1->GetPad(pad_proj+1)->Modified();
     c1->GetPad(pad_proj+1)->Update();
 
-    h = (TH2F*)gROOT->FindObject("h_proj_w");
-    if (zoomBin<0) {
-        if (t0<-1) {
-            h->GetXaxis()->UnZoom();
-            h->GetYaxis()->UnZoom();
-        }
-        else {
-            h->GetXaxis()->SetRangeUser(w0, w1);
-            h->GetYaxis()->SetRangeUser(t0, t1);
-        }
-    }
-    else {
-        h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
-        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
-    }
+    zoomHisto(h_proj_w, zoomBin, t0, t1, w0, w1, w, t);
     c1->GetPad(pad_proj+2)->Modified();
     c1->GetPad(pad_proj+2)->Update();
 
-    // zoom prediction
-    h = (TH2F*)gROOT->FindObject("h_pred_u");
-    if (zoomBin<0) {
-        if (t0<-1) {
-            h->GetXaxis()->UnZoom();
-            h->GetYaxis()->UnZoom();
-        }
-        else {
-            h->GetXaxis()->SetRangeUser(u0, u1);
-            h->GetYaxis()->SetRangeUser(t0, t1);
-        }
-    }
-    else {
-        h->GetXaxis()->SetRangeUser(u-zoomBin, u+zoomBin);
-        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
-    }
+    zoomHisto(h_pred_u, zoomBin, t0, t1, u0, u1, u, t);
     c1->GetPad(pad_pred)->Modified();
     c1->GetPad(pad_pred)->Update();
 
-    h = (TH2F*)gROOT->FindObject("h_pred_v");
-    if (zoomBin<0) {
-        if (t0<-1) {
-            h->GetXaxis()->UnZoom();
-            h->GetYaxis()->UnZoom();
-        }
-        else {
-            h->GetXaxis()->SetRangeUser(v0, v1);
-            h->GetYaxis()->SetRangeUser(t0, t1);
-        }
-    }
-    else {
-        h->GetXaxis()->SetRangeUser(v-zoomBin, v+zoomBin);
-        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
-    }
+    zoomHisto(h_pred_v, zoomBin, t0, t1, v0, v1, v, t);
     c1->GetPad(pad_pred+1)->Modified();
     c1->GetPad(pad_pred+1)->Update();
 
-    h = (TH2F*)gROOT->FindObject("h_pred_w");
-    if (zoomBin<0) {
-        if (t0<-1) {
-            h->GetXaxis()->UnZoom();
-            h->GetYaxis()->UnZoom();
-        }
-        else {
-            h->GetXaxis()->SetRangeUser(w0, w1);
-            h->GetYaxis()->SetRangeUser(t0, t1);
-        }
-    }
-    else {
-        h->GetXaxis()->SetRangeUser(w-zoomBin, w+zoomBin);
-        h->GetYaxis()->SetRangeUser(t-zoomBin, t+zoomBin);
-    }
+    zoomHisto(h_pred_w, zoomBin, t0, t1, w0, w1, w, t);
     c1->GetPad(pad_pred+2)->Modified();
     c1->GetPad(pad_pred+2)->Update();
 
@@ -812,19 +767,40 @@ void Data::DrawSubclusters()
     c1->GetPad(pad_3d)->Modified();
     c1->GetPad(pad_3d)->Update();
 
-    TLegend *leg = new TLegend(0.15, 0.40, 0.87, 0.87);
-    for (int i=1; i<nSub; i++) {
-        TLegendEntry* le = leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "p");
-        le->SetTextColor(colors[i%NC]);
+    if (isData) {
+        // pad_mc_compare is unused for data files; use the full pad for
+        // a sub-cluster id legend backed by an empty hInfo histogram.
+        TLegend *leg = new TLegend(0.15, 0.40, 0.87, 0.87);
+        for (int i=1; i<nSub; i++) {
+            TLegendEntry* le = leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "p");
+            le->SetTextColor(colors[i%NC]);
+        }
+        c1->cd(pad_mc_compare);
+        TH2F *hInfo = (TH2F*)gROOT->FindObject("hInfo");
+        if (hInfo) { delete hInfo;}
+        hInfo = new TH2F("hInfo","Info", 10, 0, 1, 10, 0, 1);
+        hInfo->Draw();
+        leg->SetNColumns(5);
+        leg->Draw();
+        infoText->Draw();
     }
-    c1->cd(pad_dqdx+1);
-    TH2F *hInfo = (TH2F*)gROOT->FindObject("hInfo");
-    if (hInfo) { delete hInfo;}
-    hInfo = new TH2F("hInfo","Info", 10, 0, 1, 10, 0, 1);
-    hInfo->Draw();
-    leg->SetNColumns(5);
-    leg->Draw();
-    infoText->Draw();
+    else {
+        // MC mode: pad_mc_compare shows the data-vs-truth comparison.
+        // Overlay a compact sub-cluster id legend on pad_3d so we don't
+        // clobber the MC compare panel.
+        TLegend *leg = new TLegend(0.0, 0.78, 1.0, 1.0);
+        leg->SetFillStyle(0);
+        leg->SetBorderSize(0);
+        for (int i=1; i<nSub; i++) {
+            TLegendEntry* le = leg->AddEntry(pg[1]->at(i), TString::Format(" %i", sub_id[i]%1000), "p");
+            le->SetTextColor(colors[i%NC]);
+        }
+        leg->SetNColumns(5);
+        c1->cd(pad_3d);
+        leg->Draw();
+        c1->GetPad(pad_3d)->Modified();
+        c1->GetPad(pad_3d)->Update();
+    }
 
 }
 
@@ -1047,11 +1023,16 @@ int Data::FindPointIndex(double x, double y)
 
     if(!rec) { return -1; }
 
-    int size = rec->at(currentCluster).size();
+    const auto& xs = rec->at(currentCluster);
+    const auto& ts = rec_t->at(currentCluster);
+    int size = xs.size();
+    double bestDist2 = 50.0; // 5x5 + 5x5 search window, squared
     for (int i=0; i<size; i++) {
-        double xx = rec->at(currentCluster).at(i);
-        double yy = rec_t->at(currentCluster).at(i);
-        if (TMath::Abs(x-xx)<5 && TMath::Abs(y-yy)<5) {
+        double dx = x - xs[i];
+        double dy = y - ts[i];
+        double d2 = dx*dx + dy*dy;
+        if (d2 < bestDist2) {
+            bestDist2 = d2;
             foundIndex = i;
         }
     }
@@ -1061,54 +1042,35 @@ int Data::FindPointIndex(double x, double y)
 
 void Data::DrawProjAll(int t0, int t1, int u0, int u1, int v0, int v1, int w0, int w1)
 {
-    int cluster_id = rec_cluster_id->at(currentCluster);
-    int index = data_cluster_map[cluster_id];
-
-    TH2F *h_proj_u_all = (TH2F*)gROOT->FindObject("h_proj_u_all");
-    TH2F *h_proj_v_all = (TH2F*)gROOT->FindObject("h_proj_v_all");
-    TH2F *h_proj_w_all = (TH2F*)gROOT->FindObject("h_proj_w_all");
+    EnsureProjAllHistos();
+    h_proj_u_all->Reset("ICES");
+    h_proj_v_all->Reset("ICES");
+    h_proj_w_all->Reset("ICES");
+    h_pred_u_all->Reset("ICES");
+    h_pred_v_all->Reset("ICES");
+    h_pred_w_all->Reset("ICES");
 
     TGraph *g_rec_u_all = (TGraph*)gROOT->FindObject("g_rec_u_all");
     TGraph *g_rec_v_all = (TGraph*)gROOT->FindObject("g_rec_v_all");
     TGraph *g_rec_w_all = (TGraph*)gROOT->FindObject("g_rec_w_all");
 
-    TH2F *h_pred_u_all = (TH2F*)gROOT->FindObject("h_pred_u_all");
-    TH2F *h_pred_v_all = (TH2F*)gROOT->FindObject("h_pred_v_all");
-    TH2F *h_pred_w_all = (TH2F*)gROOT->FindObject("h_pred_w_all");
-
-    if (!h_proj_u_all) { h_proj_u_all = new TH2F("h_proj_u_all", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime); }
-    if (!h_proj_v_all) { h_proj_v_all = new TH2F("h_proj_v_all", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime); }
-    if (!h_proj_w_all) { h_proj_w_all = new TH2F("h_proj_w_all", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);}
-
-    if (!h_pred_u_all) { h_pred_u_all = new TH2F("h_pred_u_all", "", nChannel_u, 0, nChannel_u, nTime, 0, nTime);}
-    if (!h_pred_v_all) { h_pred_v_all = new TH2F("h_pred_v_all", "", nChannel_v, nChannel_u, nChannel_u+nChannel_v, nTime, 0, nTime);}
-    if (!h_pred_w_all) { h_pred_w_all = new TH2F("h_pred_w_all", "", nChannel_w, nChannel_u+nChannel_v, nChannel_u+nChannel_v+nChannel_w, nTime, 0, nTime);}
-    
-
     TH2F *h[3] = {h_proj_u_all, h_proj_v_all, h_proj_w_all};
     TH2F *hpred[3] = {h_pred_u_all, h_pred_v_all, h_pred_w_all};
-    // 
-    int nCluster = data_channel->size();
+    int nDataClusters = data_channel->size();
     TH2F *hc = 0;
     TH2F *hp = 0;
-    for (int i=0; i<nCluster; i++) {
-        int size = data_channel->at(i).size();
+    for (int i=0; i<nDataClusters; i++) {
+        const auto& chs   = data_channel->at(i);
+        const auto& ts    = data_time_slice->at(i);
+        const auto& zs    = data_charge->at(i);
+        const auto& zpres = data_charge_pred->at(i);
+        int size = chs.size();
         for (int j=0; j<size; j++) {
-            int x = data_channel->at(i).at(j);
-            int y = data_time_slice->at(i).at(j);
-            int z = data_charge->at(i).at(j);
-            double charge_pred = data_charge_pred->at(i).at(j);
-            double z_pred = (charge_pred-z+0.01)/(z+0.01);
-            if (sign == 0) {
-                z_pred = TMath::Abs(z_pred);
-            }
-            else if (sign>0) {
-                if (z_pred<0) z_pred = 0;
-            }
-            else {
-                if (z_pred>0) z_pred = 0;
-                else z_pred = TMath::Abs(z_pred);
-            }
+            int x = chs[j];
+            int y = ts[j];
+            int z = zs[j];
+            double charge_pred = zpres[j];
+            double z_pred = applySign((charge_pred-z+0.01)/(z+0.01), sign);
             if (x<nChannel_u) {
                 hc = h_proj_u_all;
                 hp = h_pred_u_all;
@@ -1133,7 +1095,7 @@ void Data::DrawProjAll(int t0, int t1, int u0, int u1, int v0, int v1, int w0, i
     for (int i=0; i<nRec; i++) {
         nPoint += rec_u->at(i).size();
     }
-    cout << "nCluster: " << nCluster << endl;
+    cout << "nDataClusters: " << nDataClusters << endl;
     cout << "nRec: " << nRec << endl;
     cout << "nPoint: " << nPoint << endl;
     if (!g_rec_u_all) { g_rec_u_all = new TGraph(nPoint);}
@@ -1143,15 +1105,16 @@ void Data::DrawProjAll(int t0, int t1, int u0, int u1, int v0, int v1, int w0, i
     TGraph *g[3] = {g_rec_u_all, g_rec_v_all, g_rec_w_all};
     int thisPoint = 0;
     for (int i=0; i<nRec; i++) {
-        int size = rec_u->at(i).size();
+        const auto& us = rec_u->at(i);
+        const auto& vs = rec_v->at(i);
+        const auto& ws = rec_w->at(i);
+        const auto& tts = rec_t->at(i);
+        int size = us.size();
         for (int j=0; j<size; j++) {
-            double u = rec_u->at(i).at(j);
-            double v = rec_v->at(i).at(j);
-            double w = rec_w->at(i).at(j);
-            double t = rec_t->at(i).at(j);
-            g_rec_u_all->SetPoint(thisPoint, u, t);
-            g_rec_v_all->SetPoint(thisPoint, v, t);
-            g_rec_w_all->SetPoint(thisPoint, w, t);
+            double t = tts[j];
+            g_rec_u_all->SetPoint(thisPoint, us[j], t);
+            g_rec_v_all->SetPoint(thisPoint, vs[j], t);
+            g_rec_w_all->SetPoint(thisPoint, ws[j], t);
             thisPoint++;
         }
     }
@@ -1276,6 +1239,17 @@ Data::~Data()
     delete gt_3d_line;
     delete g_3d_start;
     delete currentPoint3d;
+    delete infoText;
+    delete dqdxPoint;
+    delete h_proj_u; delete h_proj_v; delete h_proj_w;
+    delete h_pred_u; delete h_pred_v; delete h_pred_w;
+    delete h_proj_u_all; delete h_proj_v_all; delete h_proj_w_all;
+    delete h_pred_u_all; delete h_pred_v_all; delete h_pred_w_all;
+    for (int i=0; i<3; i++) delete currentPoint[i];
+    for (size_t i=0; i<bad_lines.size(); i++) delete bad_lines[i];
+    for (size_t i=0; i<g_subclusters_u.size(); i++) delete g_subclusters_u[i];
+    for (size_t i=0; i<g_subclusters_v.size(); i++) delete g_subclusters_v[i];
+    for (size_t i=0; i<g_subclusters_w.size(); i++) delete g_subclusters_w[i];
     for (size_t i=0; i<g_subclusters_3d_lines.size(); i++) delete g_subclusters_3d_lines[i];
     for (size_t i=0; i<g_subclusters_3d_marks.size(); i++) delete g_subclusters_3d_marks[i];
 }
